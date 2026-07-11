@@ -75,3 +75,28 @@ export const C = {
   GAP_MAX: 7.4,
   GAP_MAX_STEP: 2.6,
   GROUND_Y: 0,
+  CEIL_Y: 10.4,
+  SPEED0: 5.2,
+  SPEED_RAMP: 0.07,
+  SPEED_MAX: 9,
+  READY_Y: 4.6,
+  DT: 1 / 120,
+  COIN_R: 0.34,
+  KEY_R: 0.34,
+  POWER_R: 0.42,
+  /** Probability a pipe spawns a rare key (keys are meant to be scarce). */
+  KEY_CHANCE: 0.02,
+  /** Probability a (non-key) pipe spawns a power-up. */
+  POWER_CHANCE: 0.09,
+  /** Probability a (non-key, non-power) pipe spawns a coin. */
+  COIN_CHANCE: 0.68,
+  MAGNET_TIME: 6,
+  SLOW_TIME: 5,
+  FAST_TIME: 5,
+  SLOW_FACTOR: 0.55,
+  FAST_FACTOR: 1.6,
+  INV_TIME: 0.7,
+  MAGNET_REACH_X: 2.3,
+  MAGNET_REACH_Y: 3.2,
+} as const;
+
