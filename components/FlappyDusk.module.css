@@ -972,3 +972,49 @@
   border: none;
   border-radius: 18px;
   padding: 18px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(180deg, #ff8266, #ff6f59);
+  box-shadow: 0 12px 30px rgba(210, 75, 56, 0.45);
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+}
+
+.playBtn:active {
+  transform: scale(0.97);
+}
+
+.btnGhost {
+  border: none;
+  border-radius: 14px;
+  padding: 11px 22px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--cream);
+  background: rgba(255, 250, 243, 0.16);
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+}
+
+.btnGhost:active {
+  transform: scale(0.96);
+}
+
+/* ---------- effect tint ---------- */
+.fxTint {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+  transition: background 0.3s ease-out;
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sub,
+  .retry,
+  .toast {
+    animation: none;
+  }
+}
