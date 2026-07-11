@@ -978,3 +978,50 @@ export default function FlappyDusk() {
       pauseOverlayEl!.style.display = 'none';
       paused = false;
       bird.rotation.z = 0;
+      shakeAmt = 0;
+      camera.position.x = CAM_X;
+      // React decides which menu to show after a restart (home vs ready)
+    }
+    function doRevive() {
+      revive(state);
+      syncPipes(state);
+      bird.rotation.z = 0;
+      shakeAmt = 0;
+      paused = false;
+      lastT = performance.now();
+      onPhaseRef.current('playing');
+    }
+    function refreshBaseSpeed() {
+      if (state.status === 'ready') {
+        const bs = levelBaseSpeed(levelRef.current, C.SPEED0);
+        state.baseSpeed = bs;
+        state.speed = bs;
+      }
+    }
+    engineApiRef.current = { applySkin, revive: doRevive, restart: doRestart, refreshBaseSpeed };
+    applySkin(skinRef.current);
+
+    /* input */
+    function action() {
+      if (paused || uiBlockRef.current) return;
+      if (state.status === 'dead') return;
+      audioInit();
+      const wasReady = state.status === 'ready';
+      if (wasReady) onPhaseRef.current('playing');
+      flap(state);
+      sfx.flap();
+      spawnPuffs();
+      vibrate(6);
+      wingPulse = 1;
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.code === 'KeyP' || e.code === 'Escape') {
+        if (state.status === 'playing') {
+          e.preventDefault();
+          togglePause();
+        }
+        return;
+      }
+      if (e.code === 'KeyM') {
+        e.preventDefault();
+        if (!e.repeat) onToggleSoundRef.current();
