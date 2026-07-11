@@ -209,3 +209,39 @@ describe('collectsCoin', () => {
     expect(collectsCoin(5 + C.COIN_R + C.BIRD_R + 0.5, base)).toBe(false);
   });
 });
+
+describe('collectsKey', () => {
+  const base: Pipe = mkPipe({ key: true });
+
+  it('collects when the bird overlaps the key', () => {
+    expect(collectsKey(5, base)).toBe(true);
+  });
+
+  it('does not collect an already-taken key', () => {
+    expect(collectsKey(5, { ...base, keyTaken: true })).toBe(false);
+  });
+
+  it('does not collect a pipe without a key', () => {
+    expect(collectsKey(5, { ...base, key: false })).toBe(false);
+  });
+
+  it('does not collect when vertically out of reach', () => {
+    expect(collectsKey(5 + C.KEY_R + C.BIRD_R + 0.5, base)).toBe(false);
+  });
+});
+
+describe('collectsPower', () => {
+  const base: Pipe = mkPipe({ power: true, powerType: 'magnet' });
+
+  it('collects when the bird overlaps the power-up', () => {
+    expect(collectsPower(5, base)).toBe(true);
+  });
+
+  it('does not collect an already-taken power-up', () => {
+    expect(collectsPower(5, { ...base, powerTaken: true })).toBe(false);
+  });
+
+  it('does not collect a pipe without a power-up', () => {
+    expect(collectsPower(5, { ...base, power: false })).toBe(false);
+  });
+});
