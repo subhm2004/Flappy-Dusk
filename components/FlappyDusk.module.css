@@ -416,3 +416,49 @@
   font-weight: 800;
 }
 
+.smallBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--coral);
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+}
+
+.smallBtn:active {
+  transform: scale(0.94);
+}
+
+.smallBtn:disabled {
+  cursor: default;
+  transform: none;
+}
+
+.smallBtn:disabled:not(.smallBtnSel) {
+  opacity: 0.45;
+  background: var(--plum);
+}
+
+.smallBtnSel {
+  background: #3fa070;
+}
+
+.smallBtn .coinIcon {
+  width: 15px;
+  height: 15px;
+}
+
+/* ---------- currency chips + title menu buttons ---------- */
+.currencyRow {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
