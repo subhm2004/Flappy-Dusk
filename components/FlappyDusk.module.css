@@ -462,3 +462,49 @@
   justify-content: center;
 }
 
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 250, 243, 0.16);
+  color: var(--cream);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.menuBtns {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 92vw;
+}
+
+.shopBtn {
+  pointer-events: auto;
+  border: none;
+  border-radius: 999px;
+  padding: 11px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--plum);
+  background: rgba(255, 250, 243, 0.94);
+  box-shadow: 0 8px 20px rgba(60, 20, 40, 0.3);
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+}
+
+.shopBtn:active {
+  transform: scale(0.95);
+}
+
+/* ---------- level bar (title) ---------- */
+.levelBox {
+  margin-top: 22px;
+  width: min(300px, 82vw);
+}
+
+.levelRow {
