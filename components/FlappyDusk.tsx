@@ -1211,3 +1211,50 @@ export default function FlappyDusk() {
   const xpNeed = xpToNext(level);
   const doneMissions = missions.filter((m) => m.done).length;
 
+  return (
+    <>
+      <canvas ref={canvasRef} className={styles.scene} />
+
+      <div
+        className={`${styles.layer} ${styles.hud}`}
+        style={{ display: phase === 'home' ? 'none' : 'flex' }}
+      >
+        <div className={styles.score} ref={scoreRef}>
+          0
+        </div>
+      </div>
+
+      <div
+        className={styles.coinHud}
+        style={{ display: phase === 'home' ? 'none' : 'flex' }}
+      >
+        <span className={styles.coinIcon} />
+        <span ref={coinCountRef}>0</span>
+      </div>
+
+      <div className={styles.powerHud} ref={powerHudRef} style={{ display: 'none' }} />
+
+      <div className={styles.controls}>
+        <button type="button" ref={muteBtnRef} className={styles.ctrlBtn} aria-label="Toggle sound">
+          🔊
+        </button>
+        <button
+          type="button"
+          ref={pauseBtnRef}
+          className={styles.ctrlBtn}
+          aria-label="Pause"
+          style={{ display: 'none' }}
+        >
+          ⏸
+        </button>
+      </div>
+
+      {/* home / main menu */}
+      {phase === 'home' && panel === 'none' && (
+        <div
+          className={`${styles.layer} ${styles.home}`}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <div className={styles.homeInner}>
+            <h1 className={styles.homeTitle}>Flappy Dusk</h1>
+            <div className={styles.homeTag}>a cozy 3D flappy adventure</div>
