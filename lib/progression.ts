@@ -134,3 +134,26 @@ export function generateDailyMissions(seed: number): Mission[] {
     const j = Math.floor(rng() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
+  return pool.slice(0, 3).map((t) => {
+    const target = t.min + Math.floor(rng() * (t.max - t.min + 1));
+    return {
+      id: t.id,
+      metric: t.metric,
+      single: !!t.single,
+      target,
+      label: t.label(target),
+      progress: 0,
+      done: false,
+      claimed: false,
+      rewardCoins: 15 + target * 2,
+      rewardXp: 30 + target * 3,
+    };
+  });
+}
+
+/** Applies a completed run to the missions, marking any newly finished. */
+export function advanceMissions(missions: Mission[], run: RunStats): Mission[] {
+  return missions.map((m) => {
+    if (m.done) return m;
+    let progress = m.progress;
+    if (m.metric === 'coins') progress += run.coins;
