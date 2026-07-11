@@ -325,3 +325,50 @@ export default function FlappyDusk() {
     lsSet(K.missionsDate, todayKey());
     engineApiRef.current?.applySkin(skinById(DEFAULT_SKIN));
     pushToast('Progress reset');
+  }
+
+  /* ---------- shop ---------- */
+  function selectSkin(id: string) {
+    setSelected(id);
+    lsSet(K.skin, id);
+  }
+  function buySkin(skin: Skin) {
+    if (owned.includes(skin.id) || coins < skin.cost) return;
+    const nc = coins - skin.cost;
+    setCoins(nc);
+    persistNum(K.coins, nc);
+    const no = Array.from(new Set([...owned, skin.id]));
+    setOwned(no);
+    persistJSON(K.owned, no);
+    selectSkin(skin.id);
+  }
+
+  /* ---------- navigation ---------- */
+  function play() {
+    // start from a clean field, then reveal the "tap to flap" prompt
+    engineApiRef.current?.restart();
+    setReviveCount(0);
+    setPhase('ready');
+  }
+  function goHome() {
+    engineApiRef.current?.restart();
+    setReviveCount(0);
+    setPhase('home');
+  }
+
+  /* ---------- game-over ---------- */
+  function playAgain() {
+    setReviveCount(0);
+    engineApiRef.current?.restart();
+    setPhase('ready');
+  }
+  function useKeyContinue() {
+    const cost = reviveCostFor(reviveCount);
+    if (keys < cost) return;
+    const nk = keys - cost;
+    setKeys(nk);
+    persistNum(K.keys, nk);
+    setReviveCount((n) => n + 1);
+    engineApiRef.current?.revive();
+  }
+
