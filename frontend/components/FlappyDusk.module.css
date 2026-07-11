@@ -1120,3 +1120,37 @@
   height: 18px;
   flex: 0 0 18px;
 }
+
+/* ---------- day / night picker ---------- */
+
+.settingHint {
+  opacity: 0.55;
+  font-size: 12.5px;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(90, 59, 70, 0.1);
+}
+
+.segment {
+  border: 0;
+  cursor: pointer;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--plum);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.6;
+}
+
+.segmentOn {
+  background: var(--coral);
+  color: var(--cream);
+  opacity: 1;
+}

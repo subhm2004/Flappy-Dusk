@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import {
   C,
@@ -46,6 +46,13 @@ import {
   type MyRank,
 } from '@/lib/api';
 import { listenForNativeSignIn, signIn } from '@/lib/auth';
+import {
+  resolveTheme,
+  THEME_SETTINGS,
+  THEMES,
+  type Theme,
+  type ThemeSetting,
+} from '@/lib/theme';
 import styles from './FlappyDusk.module.css';
 
 const K = {
@@ -63,6 +70,7 @@ const K = {
   sound: 'sunsetFlapSound',
   haptics: 'sunsetFlapHaptics',
   effects: 'sunsetFlapEffects',
+  theme: 'sunsetFlapTheme',
 };
 
 type Phase = 'home' | 'ready' | 'playing' | 'dead';
@@ -92,6 +100,7 @@ function reviveCostFor(n: number): number {
 
 interface EngineApi {
   applySkin: (skin: Skin) => void;
+  applyTheme: (theme: Theme) => void;
   revive: () => void;
   restart: () => void;
   refreshBaseSpeed: () => void;
@@ -193,6 +202,10 @@ export default function FlappyDusk() {
   const [soundOn, setSoundOn] = useState(true);
   const [hapticsOn, setHapticsOn] = useState(true);
   const [effectsOn, setEffectsOn] = useState(true);
+  const [themeSetting, setThemeSetting] = useState<ThemeSetting>('auto');
+  // Resolved separately from the setting: 'auto' has to follow the clock, and
+  // reading it during render would break hydration.
+  const [theme, setTheme] = useState<Theme>(THEMES.dusk);
 
   const [phase, setPhase] = useState<Phase>('home');
   const [runStats, setRunStats] = useState({ score: 0, coins: 0, keys: 0 });
@@ -224,6 +237,7 @@ export default function FlappyDusk() {
 
   const engineApiRef = useRef<EngineApi | null>(null);
   const skinRef = useRef<Skin>(skinById(selected));
+  const themeRef = useRef<Theme>(THEMES.dusk);
   const levelRef = useRef(level);
   const soundRef = useRef(soundOn);
   const hapticsRef = useRef(hapticsOn);
@@ -251,6 +265,7 @@ export default function FlappyDusk() {
   onPhaseRef.current = (p) => setPhase(p);
   onToggleSoundRef.current = () => toggleSound();
   onTierRef.current = (tier) => pushToast(`${tier.from} — ${tier.name} pipes`);
+  themeRef.current = theme;
 
   onRunEndRef.current = (info) => {
     const run: RunStats = {
@@ -321,11 +336,14 @@ export default function FlappyDusk() {
         // reproducing it and there'd be nothing for the server to verify.
         pushToast('Revived runs are not ranked');
       } else {
-        api.submitRun(info.replay).catch(() => {
-          // Silently dropping this is how a beaten record quietly fails to show
-          // up on the leaderboard. Say so instead.
-          pushToast("Couldn't post that run to the leaderboard");
-        });
+        api
+          .submitRun(info.replay)
+          .then(() => refreshBoard())
+          .catch(() => {
+            // Silently dropping this is how a beaten record quietly fails to
+            // show up on the leaderboard. Say so instead.
+            pushToast("Couldn't post that run to the leaderboard");
+          });
       }
     }
 
@@ -370,6 +388,11 @@ export default function FlappyDusk() {
       setSoundOn(ls.getItem(K.sound) !== '0');
       setHapticsOn(ls.getItem(K.haptics) !== '0');
       setEffectsOn(ls.getItem(K.effects) !== '0');
+
+      const savedTheme = ls.getItem(K.theme);
+      if (savedTheme === 'auto' || savedTheme === 'dusk' || savedTheme === 'night') {
+        setThemeSetting(savedTheme);
+      }
     } catch {
       /* defaults */
     }
@@ -460,6 +483,28 @@ export default function FlappyDusk() {
     pushToast(`🔑 +${bundle.keys} ${bundle.keys === 1 ? 'key' : 'keys'}`);
   }
 
+  /* ---------- day / night ---------- */
+
+  // 'auto' follows the clock, so it can't just be resolved once — a run that
+  // starts at 6:58pm should roll over to night while you're still playing.
+  useEffect(() => {
+    const pick = () => setTheme(resolveTheme(themeSetting));
+    pick();
+    if (themeSetting !== 'auto') return;
+
+    const timer = setInterval(pick, 60_000);
+    return () => clearInterval(timer);
+  }, [themeSetting]);
+
+  useEffect(() => {
+    engineApiRef.current?.applyTheme(theme);
+  }, [theme]);
+
+  function chooseTheme(setting: ThemeSetting) {
+    setThemeSetting(setting);
+    lsSet(K.theme, setting);
+  }
+
   /* ---------- leaderboard ---------- */
 
   // Pick up an existing session, and — on Android — the one that arrives by deep
@@ -483,22 +528,36 @@ export default function FlappyDusk() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function openLeaderboard() {
-    setPanel('leaderboard');
-    setBoardError(null);
-
+  /**
+   * Pulls the board fresh. Called when the panel opens *and* the moment a run is
+   * accepted — the whole point of beating your record is seeing it move, and a
+   * board cached from before the run would show the old number.
+   */
+  const refreshBoard = useCallback(async (): Promise<LeaderboardRow[] | null> => {
     try {
-      // Render's free tier sleeps, so the first call after a while is slow
-      // rather than broken. Say so instead of showing an empty board.
       const [rows, mine] = await Promise.all([
         api.leaderboard(),
         getToken() ? api.myRank().catch(() => null) : Promise.resolve(null),
       ]);
       setBoard(rows);
       setMyRank(mine);
+      setBoardError(null);
+      return rows;
     } catch {
+      // Render's free tier sleeps, so the first call after a while is slow
+      // rather than broken. Say so instead of showing an empty board.
       setBoardError('Could not reach the leaderboard.');
+      return null;
     }
+  }, []);
+
+  function openLeaderboard() {
+    setPanel('leaderboard');
+    // Drop the stale rows first, or the panel shows yesterday's numbers while
+    // the new ones are still in flight.
+    setBoard(null);
+    setBoardError(null);
+    void refreshBoard();
   }
 
   function signOut() {
@@ -580,6 +639,33 @@ export default function FlappyDusk() {
     }
     function effectsOK() {
       return effectsRef.current && !reduceMotion;
+    }
+
+    /**
+     * Repaints the whole world in a different sky.
+     *
+     * Nothing is rebuilt — the two canvas textures are redrawn in place and the
+     * shared materials get new colours — so this is cheap enough to run mid-run
+     * if the clock rolls past 7pm.
+     */
+    function applyTheme(theme: Theme) {
+      paintSky(theme);
+      paintGround(theme);
+
+      (scene.fog as THREE.Fog).color.setHex(theme.fog);
+
+      hemi.color.setHex(theme.hemi.sky);
+      hemi.groundColor.setHex(theme.hemi.ground);
+      hemi.intensity = theme.hemi.intensity;
+
+      sun.color.setHex(theme.key.color);
+      sun.intensity = theme.key.intensity;
+
+      discMat.color.setHex(theme.disc);
+      cmat.color.setHex(theme.clouds);
+      theme.dunes.forEach((c, i) => duneMats[i].color.setHex(c));
+
+      document.body.style.background = theme.pageBg;
     }
 
     /* Camera framing.
@@ -674,26 +760,26 @@ export default function FlappyDusk() {
     }
     fitCamera();
 
-    /* sky */
-    {
-      const c = document.createElement('canvas');
-      c.width = 2;
-      c.height = 512;
-      const g = c.getContext('2d')!;
+    /* sky — a one-pixel-wide gradient stretched across the background */
+    const skyCanvas = document.createElement('canvas');
+    skyCanvas.width = 2;
+    skyCanvas.height = 512;
+    const skyTex = new THREE.CanvasTexture(skyCanvas);
+    markSRGB(skyTex);
+    scene.background = skyTex;
+
+    function paintSky(theme: Theme) {
+      const g = skyCanvas.getContext('2d')!;
       const grad = g.createLinearGradient(0, 0, 0, 512);
-      grad.addColorStop(0.0, '#6D5BD0');
-      grad.addColorStop(0.45, '#E98AA0');
-      grad.addColorStop(0.78, '#FFB48C');
-      grad.addColorStop(1.0, '#FFD9A6');
+      for (const [at, color] of theme.sky) grad.addColorStop(at, color);
       g.fillStyle = grad;
       g.fillRect(0, 0, 2, 512);
-      const tex = new THREE.CanvasTexture(c);
-      markSRGB(tex);
-      scene.background = tex;
+      skyTex.needsUpdate = true;
     }
 
-    /* lights */
-    scene.add(new THREE.HemisphereLight(0xffe2c4, 0xb87a96, 0.85));
+    /* lights — the sun by day, the moon by night */
+    const hemi = new THREE.HemisphereLight(0xffe2c4, 0xb87a96, 0.85);
+    scene.add(hemi);
     const sun = new THREE.DirectionalLight(0xffd9b0, 1.15);
     sun.position.set(-9, 13, 7);
     sun.castShadow = true;
@@ -705,10 +791,8 @@ export default function FlappyDusk() {
     sun.shadow.camera.top = 24;
     sun.shadow.camera.bottom = -6;
     scene.add(sun);
-    const sunDisc = new THREE.Mesh(
-      new THREE.SphereGeometry(4.6, 20, 20),
-      new THREE.MeshBasicMaterial({ color: 0xffeec2, fog: false }),
-    );
+    const discMat = new THREE.MeshBasicMaterial({ color: 0xffeec2, fog: false });
+    const sunDisc = new THREE.Mesh(new THREE.SphereGeometry(4.6, 20, 20), discMat);
     sunDisc.position.set(-24, 9, -46);
     scene.add(sunDisc);
 
@@ -717,23 +801,27 @@ export default function FlappyDusk() {
     }
 
     /* ground */
-    let groundTex: THREE.CanvasTexture;
-    {
-      const c = document.createElement('canvas');
-      c.width = 256;
-      c.height = 64;
-      const g = c.getContext('2d')!;
-      g.fillStyle = '#F6DFAF';
+    const groundCanvas = document.createElement('canvas');
+    groundCanvas.width = 256;
+    groundCanvas.height = 64;
+    const groundTex = new THREE.CanvasTexture(groundCanvas);
+    markSRGB(groundTex);
+    groundTex.wrapS = THREE.RepeatWrapping;
+    groundTex.wrapT = THREE.RepeatWrapping;
+    groundTex.repeat.set(10, 1);
+
+    function paintGround(theme: Theme) {
+      const g = groundCanvas.getContext('2d')!;
+      g.fillStyle = theme.ground.base;
       g.fillRect(0, 0, 256, 64);
-      g.fillStyle = '#EBC894';
+      g.fillStyle = theme.ground.shade;
       g.fillRect(0, 0, 128, 64);
-      g.fillStyle = 'rgba(255,255,255,0.18)';
+      g.fillStyle = theme.ground.stripe;
       g.fillRect(120, 0, 8, 64);
-      groundTex = new THREE.CanvasTexture(c);
-      markSRGB(groundTex);
-      groundTex.wrapS = THREE.RepeatWrapping;
-      groundTex.wrapT = THREE.RepeatWrapping;
-      groundTex.repeat.set(10, 1);
+      groundTex.needsUpdate = true;
+    }
+
+    {
       // Deep enough that pulling the camera back on a tall screen can't reveal
       // sky underneath it. The top face still sits exactly on GROUND_Y.
       const groundH = 34;
@@ -747,10 +835,12 @@ export default function FlappyDusk() {
     }
 
     /* dunes */
+    const duneMats: THREE.MeshStandardMaterial[] = [];
     {
-      const colors = [0xb79bd8, 0xa88ac9, 0xc4a9e3];
+      const colors = THEMES.dusk.dunes;
+      for (let i = 0; i < 3; i++) duneMats.push(mat(colors[i]));
       for (let i = 0; i < 6; i++) {
-        const d = new THREE.Mesh(new THREE.SphereGeometry(8 + (i % 3) * 3, 10, 8), mat(colors[i % 3]));
+        const d = new THREE.Mesh(new THREE.SphereGeometry(8 + (i % 3) * 3, 10, 8), duneMats[i % 3]);
         d.scale.y = 0.35;
         d.position.set(-26 + i * 13, 0.4, -26 - (i % 2) * 9);
         scene.add(d);
@@ -759,8 +849,8 @@ export default function FlappyDusk() {
 
     /* clouds */
     const clouds: THREE.Group[] = [];
+    const cmat = new THREE.MeshStandardMaterial({ color: 0xfff4e3, flatShading: true, roughness: 1 });
     {
-      const cmat = new THREE.MeshStandardMaterial({ color: 0xfff4e3, flatShading: true, roughness: 1 });
       for (let i = 0; i < 7; i++) {
         const grp = new THREE.Group();
         const n = 3 + (i % 2);
@@ -1266,8 +1356,15 @@ export default function FlappyDusk() {
         state.speed = bs;
       }
     }
-    engineApiRef.current = { applySkin, revive: doRevive, restart: doRestart, refreshBaseSpeed };
+    engineApiRef.current = {
+      applySkin,
+      applyTheme,
+      revive: doRevive,
+      restart: doRestart,
+      refreshBaseSpeed,
+    };
     applySkin(skinRef.current);
+    applyTheme(themeRef.current);
 
     /* input */
     function action() {
@@ -1911,6 +2008,31 @@ export default function FlappyDusk() {
             <div className={styles.shopHead}>
               <span>Settings</span>
             </div>
+
+            {/* Auto follows the clock: night from 7pm to 6am. */}
+            <div className={styles.settingRow}>
+              <span>
+                Sky
+                {themeSetting === 'auto' ? (
+                  <span className={styles.settingHint}> — {theme.name} right now</span>
+                ) : null}
+              </span>
+              <span className={styles.segmented}>
+                {THEME_SETTINGS.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={`${styles.segment} ${
+                      themeSetting === option.id ? styles.segmentOn : ''
+                    }`}
+                    onClick={() => chooseTheme(option.id)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </span>
+            </div>
+
             <div className={styles.settingRow}>
               <span>Sound</span>
               <button
