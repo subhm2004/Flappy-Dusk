@@ -745,3 +745,49 @@ export default function FlappyDusk() {
       const topH = Math.max(0.2, ceilExt - gapTop);
       u.top.scale.set(1, topH, 1);
       u.top.position.y = gapTop + topH / 2;
+      u.lipB.position.y = gapBot - 0.27;
+      u.lipT.position.y = gapTop + 0.27;
+    }
+
+    function syncPipes(s: State) {
+      const magnetOn = s.magnetT > 0;
+      for (let i = 0; i < pipePool.length; i++) {
+        const grp = pipePool[i];
+        const cm = coinPool[i];
+        const km = keyPool[i];
+        const sp = powerPool[i];
+        if (i < s.pipes.length) {
+          const p = s.pipes[i];
+          grp.visible = true;
+          grp.position.x = p.x;
+          if (grp.userData.gapY !== p.gapY) shapePipe(grp, p.gapY);
+          if (p.coin && !p.coinTaken) {
+            cm.visible = true;
+            if (magnetOn) {
+              const dx = p.x - bird.position.x;
+              const t = Math.max(0, Math.min(1, 1 - dx / 5));
+              cm.position.set(
+                p.x + (bird.position.x - p.x) * t * 0.85,
+                p.coinY + (bird.position.y - p.coinY) * t * 0.85,
+                0,
+              );
+            } else {
+              cm.position.set(p.x, p.coinY, 0);
+            }
+          } else {
+            cm.visible = false;
+          }
+          if (p.key && !p.keyTaken) {
+            km.visible = true;
+            km.position.set(p.x, p.keyY, 0);
+          } else {
+            km.visible = false;
+          }
+          if (p.power && !p.powerTaken) {
+            sp.visible = true;
+            sp.material = powerMats[p.powerType];
+            sp.position.set(p.x, p.powerY, 0);
+          } else {
+            sp.visible = false;
+          }
+        } else {
