@@ -1070,3 +1070,27 @@
   line-height: 1.5;
   opacity: 0.75;
 }
+
+/* Google's sign-in branding: white surface, their grey text, their untouched
+   mark. The rest of the game's buttons are cream and rounded; this one isn't
+   ours to restyle. */
+.googleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  color: #3c4043;
+  border: 1px solid #dadce0;
+  font-weight: 600;
+}
+
+.googleBtn:hover {
+  background: #f8f9fa;
+  border-color: #d2d5d9;
+}
+
+.googleG {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
