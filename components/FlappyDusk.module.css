@@ -508,3 +508,50 @@
 }
 
 .levelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.levelBadge {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--coral);
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+
+.xpText {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cream);
+  opacity: 0.85;
+}
+
+.xpBar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 250, 243, 0.22);
+  overflow: hidden;
+}
+
+.xpFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffd24d, #ff8a3d);
+  transition: width 0.3s ease-out;
+}
+
+/* ---------- power-up HUD ---------- */
+.powerHud {
+  position: fixed;
+  top: 64px;
+  left: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(42, 31, 61, 0.4);
