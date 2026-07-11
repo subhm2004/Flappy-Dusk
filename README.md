@@ -32,3 +32,37 @@
 > The GIF above is a **stylized preview** of the game loop. To drop in a real
 > screen recording, see [Recording your own demo](#recording-your-own-demo).
 
+---
+
+## Table of contents
+
+- [About](#about)
+- [Features](#features)
+- [Controls](#controls)
+- [How to play](#how-to-play)
+- [Getting started](#getting-started)
+- [Scripts](#scripts)
+- [Project structure](#project-structure)
+- [How it works](#how-it-works)
+- [Testing](#testing)
+- [Deploying](#deploying)
+- [Recording your own demo](#recording-your-own-demo)
+- [Roadmap](#roadmap)
+- [License](#license)
+
+---
+
+## About
+
+**Flappy Dusk** reimagines tap-to-fly gameplay as a warm, papercraft 3D scene at
+sunset: a round little finch, drifting clouds, violet dunes, and a glowing sun on
+the horizon — all rendered in real time with Three.js.
+
+Under the pretty surface, it's built like a real game:
+
+- The **game core is pure** — no DOM, no Three.js, fully deterministic given a
+  seed. It runs headlessly in unit tests.
+- The **renderer is imperative** and runs a fixed-timestep loop at 120 Hz, so the
+  animation never triggers a React re-render.
+- **React owns the meta-game** — currencies, shop, missions, levels, settings —
+  and talks to the engine through a small ref bridge.
