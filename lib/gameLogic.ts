@@ -126,3 +126,28 @@ function makePipe(x: number, gapY: number, rng: () => number): Pipe {
   const keyRoll = rng();
   const powerRoll = rng();
   const coinRoll = rng();
+  const typeRoll = rng();
+  const spread = Math.max(0, C.GAP / 2 - C.COIN_R - 0.22);
+  const y = gapY + (rng() * 2 - 1) * spread;
+
+  const key = keyRoll < C.KEY_CHANCE;
+  const power = !key && powerRoll < C.POWER_CHANCE;
+  const coin = !key && !power && coinRoll < C.COIN_CHANCE;
+  const powerType =
+    POWER_TYPES[Math.min(POWER_TYPES.length - 1, Math.floor(typeRoll * POWER_TYPES.length))];
+
+  return {
+    x,
+    gapY,
+    scored: false,
+    coin,
+    coinY: y,
+    coinTaken: false,
+    key,
+    keyY: y,
+    keyTaken: false,
+    power,
+    powerType,
+    powerY: y,
+    powerTaken: false,
+  };
