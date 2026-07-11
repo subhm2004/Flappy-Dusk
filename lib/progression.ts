@@ -89,3 +89,26 @@ interface MissionTemplate {
 
 const TEMPLATES: MissionTemplate[] = [
   { id: 'coins', metric: 'coins', min: 25, max: 70, label: (t) => `Collect ${t} coins` },
+  { id: 'score', metric: 'score', min: 10, max: 25, single: true, label: (t) => `Score ${t} in one run` },
+  { id: 'keys', metric: 'keys', min: 1, max: 2, label: (t) => `Collect ${t} key${t > 1 ? 's' : ''}` },
+  { id: 'powerups', metric: 'powerups', min: 3, max: 8, label: (t) => `Grab ${t} power-ups` },
+  { id: 'runs', metric: 'runs', min: 4, max: 10, label: (t) => `Play ${t} games` },
+];
+
+export interface Mission {
+  id: string;
+  metric: Metric;
+  single: boolean;
+  target: number;
+  label: string;
+  progress: number;
+  done: boolean;
+  claimed: boolean;
+  rewardCoins: number;
+  rewardXp: number;
+}
+
+/** A stable seed for a given date (defaults to today). */
+export function dateSeed(d = new Date()): number {
+  const s = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  let h = 2166136261;
