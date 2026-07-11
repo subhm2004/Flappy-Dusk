@@ -277,3 +277,49 @@
   justify-content: center;
 }
 
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 250, 243, 0.16);
+  color: var(--cream);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.shopBtn {
+  pointer-events: auto;
+  margin-top: 20px;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 26px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--plum);
+  background: rgba(255, 250, 243, 0.94);
+  box-shadow: 0 8px 20px rgba(60, 20, 40, 0.3);
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+}
+
+.shopBtn:active {
+  transform: scale(0.95);
+}
+
+/* ---------- shared buttons ---------- */
+.btn {
+  border: none;
+  border-radius: 14px;
+  padding: 13px 22px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--plum);
+  background: rgba(255, 250, 243, 0.94);
+  box-shadow: 0 8px 20px rgba(60, 20, 40, 0.3);
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+}
+
+.btn:active {
