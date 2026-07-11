@@ -16,3 +16,12 @@ body {
   height: 100%;
   overflow: hidden;
 }
+
+body {
+  font-family: ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN",
+    "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: #2a1f3d;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
