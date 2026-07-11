@@ -142,3 +142,31 @@ must not live in the repo. To ship a Play-Store-grade build you would:
 
 Not wired up here, since a debug APK is all you need to sideload and play.
 
+---
+
+## CI
+
+`.github/workflows/ci.yml` runs on every push and PR to `main`:
+`npm ci` → `npm run typecheck` → `npm test` → `npm run build`, on Node 20 and 22.
+
+`.github/workflows/android.yml` builds the APK — manually via **Run workflow**,
+or automatically on a `v*` tag.
+
+---
+
+## Troubleshooting
+
+**APK installs but shows a white screen.** The web bundle didn't make it in.
+Check that `npm run build` produced `out/index.html` and that `npx cap sync
+android` ran after it — `cap sync` copies `out/` into
+`android/app/src/main/assets/public/`.
+
+**Assets 404 on GitHub Pages.** You built without the base path. Rebuild with
+`NEXT_PUBLIC_BASE_PATH=/Flappy-Dusk npm run build`.
+
+**Progress resets every launch.** `localStorage` is scoped to the origin. Keep
+`server.androidScheme: 'https'` in `capacitor.config.ts` — switching schemes
+changes the origin and orphans the old save.
+
+**Gradle fails with an "unsupported class file version".** Wrong JDK. Capacitor 6
+wants JDK 17; CI pins it via `actions/setup-java`.
