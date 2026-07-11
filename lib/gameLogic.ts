@@ -100,3 +100,29 @@ export const C = {
   MAGNET_REACH_Y: 3.2,
 } as const;
 
+/** Mulberry32 — a tiny, fast, seedable PRNG. */
+export function makeRng(seed: number): () => number {
+  let t = seed >>> 0;
+  return function () {
+    t += 0x6d2b79f5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function nextGapY(prevGapY: number, rng: () => number): number {
+  const lo = Math.max(C.GAP_MIN, prevGapY - C.GAP_MAX_STEP);
+  const hi = Math.min(C.GAP_MAX, prevGapY + C.GAP_MAX_STEP);
+  return lo + (hi - lo) * rng();
+}
+
+/**
+ * Builds one pipe (plus at most one pickup) from the gap centre. A pipe carries
+ * at most one of: a rare key, a power-up, or a coin — checked in that priority.
+ * Always consumes exactly five rng values so the stream stays stable.
+ */
+function makePipe(x: number, gapY: number, rng: () => number): Pipe {
+  const keyRoll = rng();
+  const powerRoll = rng();
+  const coinRoll = rng();
