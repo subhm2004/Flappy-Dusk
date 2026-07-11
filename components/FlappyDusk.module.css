@@ -230,3 +230,50 @@
 
 /* ---------- fatal error ---------- */
 .fatal {
+  background: rgba(42, 31, 61, 0.94);
+  padding: 24px;
+  z-index: 8;
+}
+
+.fatalPanel {
+  max-width: 460px;
+  background: var(--cream);
+  color: var(--plum);
+  border-radius: 18px;
+  padding: 22px 26px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* ---------- death flash ---------- */
+.flash {
+  position: fixed;
+  inset: 0;
+  background: #ff3b30;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.flashOn {
+  animation: flashHit 0.5s ease-out;
+}
+
+@keyframes flashHit {
+  0% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------- currency chips + title shop button ---------- */
+.currencyRow {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
