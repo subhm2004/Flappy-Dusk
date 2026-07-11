@@ -698,3 +698,50 @@ export default function FlappyDusk() {
     }
 
     /* power-up pool (billboard sprites with drawn icons) */
+    function powerTex(bg: string, emoji: string) {
+      const cv = document.createElement('canvas');
+      cv.width = 128;
+      cv.height = 128;
+      const g = cv.getContext('2d')!;
+      g.beginPath();
+      g.arc(64, 64, 56, 0, Math.PI * 2);
+      g.fillStyle = bg;
+      g.fill();
+      g.lineWidth = 8;
+      g.strokeStyle = 'rgba(255,255,255,0.9)';
+      g.stroke();
+      g.font = '62px serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(emoji, 64, 72);
+      const t = new THREE.CanvasTexture(cv);
+      markSRGB(t);
+      return t;
+    }
+    const powerMats: Record<PowerType, THREE.SpriteMaterial> = {
+      shield: new THREE.SpriteMaterial({ map: powerTex('#38bdf8', '🛡'), transparent: true }),
+      magnet: new THREE.SpriteMaterial({ map: powerTex('#ef4444', '🧲'), transparent: true }),
+      slow: new THREE.SpriteMaterial({ map: powerTex('#22c55e', '🐢'), transparent: true }),
+      fast: new THREE.SpriteMaterial({ map: powerTex('#f59e0b', '⚡'), transparent: true }),
+    };
+    const powerPool: THREE.Sprite[] = [];
+    for (let i = 0; i < POOL; i++) {
+      const sp = new THREE.Sprite(powerMats.shield);
+      sp.scale.set(0.95, 0.95, 1);
+      sp.visible = false;
+      powerPool.push(sp);
+      scene.add(sp);
+    }
+
+    function shapePipe(grp: THREE.Group, gapY: number) {
+      const u = grp.userData;
+      u.gapY = gapY;
+      const gapTop = gapY + C.GAP / 2;
+      const gapBot = gapY - C.GAP / 2;
+      const bottomH = Math.max(0.2, gapBot - C.GROUND_Y);
+      u.bottom.scale.set(1, bottomH, 1);
+      u.bottom.position.y = C.GROUND_Y + bottomH / 2;
+      const ceilExt = C.CEIL_Y + 4;
+      const topH = Math.max(0.2, ceilExt - gapTop);
+      u.top.scale.set(1, topH, 1);
+      u.top.position.y = gapTop + topH / 2;
