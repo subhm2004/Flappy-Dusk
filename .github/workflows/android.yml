@@ -55,6 +55,11 @@ jobs:
       - name: Scaffold the Android project
         run: npx cap add android
 
+      # Launcher icon, round icon, adaptive icon and splash screens, all derived
+      # from assets/ — android/ is regenerated each run, so this must be too.
+      - name: Generate the app icon and splash screens
+        run: npx @capacitor/assets generate --android
+
       - name: Copy the bundle into the project
         run: npx cap sync android
 
