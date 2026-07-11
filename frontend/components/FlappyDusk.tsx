@@ -648,9 +648,35 @@ export default function FlappyDusk() {
      * shared materials get new colours — so this is cheap enough to run mid-run
      * if the clock rolls past 7pm.
      */
+    let currentTheme: Theme = THEMES.dusk;
+
+    /**
+     * The bird, the pipes and the pickups light themselves.
+     *
+     * Moonlight is weak on purpose — that's what makes night feel like night —
+     * but the things you have to *see* to play can't be sacrificed to the mood.
+     * The bird and the pipes take their own colour as emissive, so a coral bird
+     * glows coral and an Ember pipe glows red, rather than everything flattening
+     * to grey. Re-runs whenever those colours change, which is why applySkin and
+     * setPipeTier call it too.
+     */
+    function applyGlow(theme: Theme) {
+      const actors = [bodyMat, bellyMat, beakMat, wingMatL, wingMatR, tailMat, pipeBodyMat, pipeRimMat];
+      for (const m of actors) {
+        m.emissive.copy(m.color);
+        m.emissiveIntensity = theme.glow.actor;
+      }
+      coinMat.emissive.setHex(theme.glow.coin.color);
+      coinMat.emissiveIntensity = theme.glow.coin.intensity;
+      keyMat.emissive.setHex(theme.glow.key.color);
+      keyMat.emissiveIntensity = theme.glow.key.intensity;
+    }
+
     function applyTheme(theme: Theme) {
+      currentTheme = theme;
       paintSky(theme);
       paintGround(theme);
+      applyGlow(theme);
 
       (scene.fog as THREE.Fog).color.setHex(theme.fog);
 
@@ -930,6 +956,8 @@ export default function FlappyDusk() {
       wingMatL.color.set(skin.wing);
       wingMatR.color.set(skin.wing);
       tailMat.color.set(skin.tail);
+      // The glow is the bird's own colour, so it has to follow the new skin.
+      applyGlow(currentTheme);
     }
 
     /* pipe pool */
@@ -963,18 +991,19 @@ export default function FlappyDusk() {
       }
     }
 
+    const coinMat = new THREE.MeshStandardMaterial({
+      color: 0xffd24d,
+      metalness: 0.35,
+      roughness: 0.35,
+      emissive: 0x5a3d00,
+      emissiveIntensity: 0.35,
+    });
+
     /* coin pool */
     const coinPool: THREE.Mesh[] = [];
     {
       const coinGeo = new THREE.CylinderGeometry(C.COIN_R, C.COIN_R, 0.09, 20);
       coinGeo.rotateX(Math.PI / 2);
-      const coinMat = new THREE.MeshStandardMaterial({
-        color: 0xffd24d,
-        metalness: 0.35,
-        roughness: 0.35,
-        emissive: 0x5a3d00,
-        emissiveIntensity: 0.35,
-      });
       for (let i = 0; i < POOL; i++) {
         const cm = new THREE.Mesh(coinGeo, coinMat);
         cm.castShadow = true;
@@ -984,16 +1013,17 @@ export default function FlappyDusk() {
       }
     }
 
+    const keyMat = new THREE.MeshStandardMaterial({
+      color: 0x37b6ff,
+      metalness: 0.5,
+      roughness: 0.22,
+      emissive: 0x0c3f70,
+      emissiveIntensity: 0.55,
+    });
+
     /* key pool (rare, blue) */
     const keyPool: THREE.Group[] = [];
     {
-      const keyMat = new THREE.MeshStandardMaterial({
-        color: 0x37b6ff,
-        metalness: 0.5,
-        roughness: 0.22,
-        emissive: 0x0c3f70,
-        emissiveIntensity: 0.55,
-      });
       const ringGeo = new THREE.TorusGeometry(0.15, 0.055, 12, 22);
       const shaftGeo = new THREE.BoxGeometry(0.09, 0.42, 0.09);
       const toothGeo = new THREE.BoxGeometry(0.12, 0.07, 0.08);
@@ -1255,6 +1285,8 @@ export default function FlappyDusk() {
       pipeTier = tier;
       pipeBodyMat.color.setHex(tier.body);
       pipeRimMat.color.setHex(tier.rim);
+      // Same as the bird: the glow is the pipe's own colour.
+      applyGlow(currentTheme);
     }
 
     let state = newRun();

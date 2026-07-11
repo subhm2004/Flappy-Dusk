@@ -31,6 +31,21 @@ export interface Theme {
   clouds: number;
   /** Page background, so the browser chrome matches. */
   pageBg: string;
+
+  /**
+   * How much the things you actually have to see give off their own light.
+   *
+   * Moonlight is weak by design — that's what makes night feel like night — but
+   * the bird, the pipes and the pickups are the game, and a moody sky is no
+   * excuse for losing them in the dark. They light themselves instead, so the
+   * scenery stays dim while the gameplay stays legible.
+   */
+  glow: {
+    /** Bird and pipes: emissive is their own colour at this strength. */
+    actor: number;
+    coin: { color: number; intensity: number };
+    key: { color: number; intensity: number };
+  };
 }
 
 export const THEMES: Record<ThemeId, Theme> = {
@@ -51,6 +66,12 @@ export const THEMES: Record<ThemeId, Theme> = {
     dunes: [0xb79bd8, 0xa88ac9, 0xc4a9e3],
     clouds: 0xfff4e3,
     pageBg: '#2a1f3d',
+    // Daylight already does the work; these are the values the game shipped with.
+    glow: {
+      actor: 0,
+      coin: { color: 0x5a3d00, intensity: 0.35 },
+      key: { color: 0x0c3f70, intensity: 0.55 },
+    },
   },
 
   night: {
@@ -64,13 +85,20 @@ export const THEMES: Record<ThemeId, Theme> = {
     ],
     fog: 0x3b2d61,
     // Moonlight is cold and much weaker, and it bounces off the sand blue.
-    hemi: { sky: 0x9fb2e8, ground: 0x2a2145, intensity: 0.55 },
-    key: { color: 0xc3d6ff, intensity: 0.6 },
+    hemi: { sky: 0x9fb2e8, ground: 0x2a2145, intensity: 0.72 },
+    key: { color: 0xc3d6ff, intensity: 0.78 },
     disc: 0xf3f1e2,
     ground: { base: '#9B8768', shade: '#83705A', stripe: 'rgba(255,255,255,0.10)' },
     dunes: [0x554a7d, 0x453b68, 0x63578c],
     clouds: 0xcfc9e4,
     pageBg: '#0e0b1c',
+    // The bird, the pipes and the pickups light themselves, so they read
+    // against a dark sky without brightening the sky itself.
+    glow: {
+      actor: 0.42,
+      coin: { color: 0xffb545, intensity: 0.95 },
+      key: { color: 0x49c8ff, intensity: 1.0 },
+    },
   },
 };
 
