@@ -1924,14 +1924,6 @@ export default function FlappyDusk() {
               </ol>
             )}
 
-            {me ? (
-              <p className={styles.boardNote}>
-                Signed in as <b>{me.name}</b>. Every run you finish is ranked — continues included.
-              </p>
-            ) : (
-              <p className={styles.boardNote}>Sign in to have your runs ranked.</p>
-            )}
-
             <div className={styles.menuBtns}>
               {me ? (
                 <button type="button" className={styles.shopBtn} onClick={signOut}>
