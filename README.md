@@ -270,3 +270,36 @@ Or push to GitHub and import the repo at [vercel.com/new](https://vercel.com/new
 ## Recording your own demo
 
 `docs/demo.gif` ships as a stylized preview. To replace it with real gameplay:
+
+**macOS**
+
+```bash
+# 1. record a clip (Cmd+Shift+5, or QuickTime screen recording) -> demo.mov
+# 2. convert to a looping gif
+ffmpeg -i demo.mov \
+  -vf "fps=20,scale=640:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse" \
+  -loop 0 docs/demo.gif
+```
+
+**Anything else:** [Kap](https://getkap.co), [Peek](https://github.com/phw/peek),
+or ScreenToGif export a GIF directly. Save it to `docs/demo.gif` and the README
+picks it up automatically.
+
+---
+
+## Roadmap
+
+Not built yet:
+
+- [ ] PWA — installable + offline play
+- [ ] Daily challenge (date-seeded run, same pipes for everyone)
+- [ ] Local leaderboard (top 5 runs)
+- [ ] Background music
+- [ ] Difficulty modes (easy / normal / hard)
+- [ ] Moving pipes at high scores
+
+---
+
+## License
+
+MIT — do whatever you like with it.
