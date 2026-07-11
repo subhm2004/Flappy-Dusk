@@ -885,3 +885,49 @@ export default function FlappyDusk() {
         setTimeout(() => blip(1040, 1560, 0.12, 'triangle', 0.12), 60);
       },
       power: () => {
+        blip(500, 900, 0.09, 'square', 0.1);
+        setTimeout(() => blip(900, 1400, 0.12, 'sine', 0.12), 60);
+      },
+      shield: () => blip(300, 520, 0.16, 'sawtooth', 0.12),
+      hit: () => blip(180, 60, 0.22, 'square', 0.16),
+    };
+
+    /* HUD helpers */
+    function pulse(el: HTMLElement) {
+      el.classList.remove(styles.pulse);
+      void el.offsetWidth;
+      el.classList.add(styles.pulse);
+    }
+    function setScore(n: number) {
+      scoreEl!.textContent = String(n);
+      pulse(scoreEl!);
+    }
+    function setCoinsHud(n: number) {
+      coinCountEl!.textContent = String(n);
+      pulse(coinCountEl!);
+    }
+
+    /* state */
+    let state = createState(undefined, levelBaseSpeed(levelRef.current, C.SPEED0));
+    let paused = false;
+    let wingPulse = 0;
+    let acc = 0;
+    let lastT = performance.now();
+    let shakeAmt = 0;
+    let runPowerups = 0;
+    const reported = { coins: 0, keys: 0, powerups: 0 };
+    let lastHud = '';
+    let lastTint = '';
+    let lastSoundIcon = '';
+    syncPipes(state);
+    scoreEl.textContent = '0';
+    coinCountEl.textContent = '0';
+
+    function resetRunReporting() {
+      runPowerups = 0;
+      reported.coins = 0;
+      reported.keys = 0;
+      reported.powerups = 0;
+    }
+
+    function triggerDeath() {
