@@ -202,3 +202,29 @@ export function revive(s: State): void {
   s.birdY = C.READY_Y;
   s.birdVY = 0;
   s.pipes = buildField(s.rng);
+  s.shield = false;
+  s.magnetT = 0;
+  s.slowT = 0;
+  s.fastT = 0;
+  s.invT = C.INV_TIME;
+}
+
+function applyPower(s: State, t: PowerType): void {
+  if (t === 'shield') s.shield = true;
+  else if (t === 'magnet') s.magnetT = C.MAGNET_TIME;
+  else if (t === 'slow') {
+    s.slowT = C.SLOW_TIME;
+    s.fastT = 0;
+  } else if (t === 'fast') {
+    s.fastT = C.FAST_TIME;
+    s.slowT = 0;
+  }
+}
+
+export function collide(birdY: number, pipe: Pipe): boolean {
+  const inSlab = Math.abs(C.BIRD_X - pipe.x) < C.PIPE_R + C.BIRD_R;
+  if (!inSlab) return false;
+  const top = pipe.gapY + C.GAP / 2;
+  const bot = pipe.gapY - C.GAP / 2;
+  return birdY + C.BIRD_R > top || birdY - C.BIRD_R < bot;
+}
