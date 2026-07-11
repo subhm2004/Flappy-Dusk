@@ -1,0 +1,73 @@
+name: Android APK
+
+on:
+  # Manual "Run workflow" button — use this to get an APK on demand.
+  workflow_dispatch:
+  # Tagging a version publishes the APK to a GitHub Release.
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: Build debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: npm
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Export the web bundle
+        run: npm run build
+
+      # android/ is not committed — Capacitor regenerates it from
+      # capacitor.config.ts on every run, so there is no native code to drift.
+      - name: Scaffold the Android project
+        run: npx cap add android
+
+      - name: Copy the bundle into the project
+        run: npx cap sync android
+
+      - name: Build the APK
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: android
+
+      - name: Rename the APK
+        run: mv android/app/build/outputs/apk/debug/app-debug.apk flappy-dusk.apk
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flappy-dusk-apk
+          path: flappy-dusk.apk
+          if-no-files-found: error
+
+      - name: Attach the APK to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: flappy-dusk.apk
+          body: |
+            Download `flappy-dusk.apk` below and install it on your Android device.
+
+            This is a **debug-signed** build, so Android will ask you to allow
+            installs from unknown sources the first time.
