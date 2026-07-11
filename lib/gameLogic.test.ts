@@ -385,3 +385,38 @@ describe('step', () => {
     const a = simulate(77, 6, 24);
     const b = simulate(77, 6, 24);
     expect(a.scored).toBe(b.scored);
+    expect(a.coined).toBe(b.coined);
+    expect(a.s.score).toBe(b.s.score);
+    expect(a.s.coins).toBe(b.s.coins);
+    expect(a.s.keys).toBe(b.s.keys);
+    expect(a.s.birdY).toBeCloseTo(b.s.birdY, 10);
+  });
+
+  it('scores and collects coins with a gap-following autopilot', () => {
+    // A cheating "player" that each step steers the bird onto the nearest pipe
+    // ahead (its coin if it has one) — this never dies, so we can assert that
+    // passing pipes reliably scores and that coins get collected.
+    const s = createState(5);
+    s.status = 'playing';
+    let scored = 0;
+    let coined = 0;
+    for (let i = 0; i < 2000; i++) {
+      const target = s.pipes.find(
+        (p) => p.x + C.PIPE_R >= C.BIRD_X - C.BIRD_R,
+      );
+      if (target) {
+        s.birdY = target.coin && !target.coinTaken ? target.coinY : target.gapY;
+        s.birdVY = 0;
+      }
+      const ev = step(s, C.DT);
+      scored += ev.scored;
+      coined += ev.coined;
+      expect(ev.died).toBe(false);
+    }
+    expect(scored).toBeGreaterThan(0);
+    expect(coined).toBeGreaterThan(0);
+    expect(s.score).toBe(scored);
+    expect(s.coins).toBe(coined);
+    expect(s.status).toBe('playing');
+  });
+});
