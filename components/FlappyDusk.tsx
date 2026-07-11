@@ -92,3 +92,49 @@ function lsSet(key: string, value: string) {
   try {
     window.localStorage.setItem(key, value);
   } catch {
+    /* storage may be unavailable */
+  }
+}
+const persistNum = (k: string, n: number) => lsSet(k, String(n));
+const persistJSON = (k: string, v: unknown) => lsSet(k, JSON.stringify(v));
+
+export default function FlappyDusk() {
+  /* ---------- shared state (React owns; engine reads via refs) ---------- */
+  const [best, setBest] = useState(0);
+  const [coins, setCoins] = useState(0);
+  const [keys, setKeys] = useState(0);
+  const [owned, setOwned] = useState<string[]>([DEFAULT_SKIN]);
+  const [selected, setSelected] = useState<string>(DEFAULT_SKIN);
+  const [level, setLevel] = useState(1);
+  const [xp, setXp] = useState(0);
+  const [stats, setStats] = useState<LifetimeStats>(EMPTY_STATS);
+  const [unlocked, setUnlocked] = useState<string[]>([]);
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [soundOn, setSoundOn] = useState(true);
+  const [hapticsOn, setHapticsOn] = useState(true);
+  const [effectsOn, setEffectsOn] = useState(true);
+
+  const [phase, setPhase] = useState<Phase>('home');
+  const [runStats, setRunStats] = useState({ score: 0, coins: 0, keys: 0 });
+  const [reviveCount, setReviveCount] = useState(0);
+  const [panel, setPanel] = useState<'none' | 'shop' | 'missions' | 'settings'>('none');
+  const [toasts, setToasts] = useState<{ id: number; text: string }[]>([]);
+
+  /* ---------- DOM + bridge refs ---------- */
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scoreRef = useRef<HTMLDivElement>(null);
+  const coinCountRef = useRef<HTMLSpanElement>(null);
+  const pauseBtnRef = useRef<HTMLButtonElement>(null);
+  const muteBtnRef = useRef<HTMLButtonElement>(null);
+  const pauseOverlayRef = useRef<HTMLDivElement>(null);
+  const powerHudRef = useRef<HTMLDivElement>(null);
+  const fxRef = useRef<HTMLDivElement>(null);
+  const flashRef = useRef<HTMLDivElement>(null);
+  const fatalRef = useRef<HTMLDivElement>(null);
+  const fatalMsgRef = useRef<HTMLDivElement>(null);
+
+  const engineApiRef = useRef<EngineApi | null>(null);
+  const skinRef = useRef<Skin>(skinById(selected));
+  const levelRef = useRef(level);
+  const soundRef = useRef(soundOn);
+  const hapticsRef = useRef(hapticsOn);
