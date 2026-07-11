@@ -1258,3 +1258,50 @@ export default function FlappyDusk() {
           <div className={styles.homeInner}>
             <h1 className={styles.homeTitle}>Flappy Dusk</h1>
             <div className={styles.homeTag}>a cozy 3D flappy adventure</div>
+
+            <div className={styles.statCards}>
+              <div className={styles.statCard}>
+                <div className={styles.statVal}>{best}</div>
+                <div className={styles.statLbl}>BEST</div>
+              </div>
+              <div className={styles.statCard}>
+                <div className={styles.statVal}>LV {level}</div>
+                <div className={styles.statLbl}>
+                  {xp}/{xpNeed} XP
+                </div>
+              </div>
+              <div className={styles.statCard}>
+                <div className={styles.statVal}>
+                  <span className={styles.coinIcon} /> {coins}
+                </div>
+                <div className={styles.statLbl}>COINS</div>
+              </div>
+              <div className={styles.statCard}>
+                <div className={styles.statVal}>🔑 {keys}</div>
+                <div className={styles.statLbl}>KEYS</div>
+              </div>
+            </div>
+
+            <div className={styles.xpBar}>
+              <div
+                className={styles.xpFill}
+                style={{ width: `${Math.min(100, (xp / xpNeed) * 100)}%` }}
+              />
+            </div>
+
+            <button type="button" className={styles.playBtn} onClick={play}>
+              ▶ Play
+            </button>
+
+            <div className={styles.menuBtns}>
+              <button type="button" className={styles.shopBtn} onClick={() => setPanel('shop')}>
+                🛍 Shop
+              </button>
+              <button type="button" className={styles.shopBtn} onClick={() => setPanel('missions')}>
+                🎯 Missions{doneMissions > 0 ? ` (${doneMissions}/3)` : ''}
+              </button>
+              <button type="button" className={styles.shopBtn} onClick={() => setPanel('settings')}>
+                ⚙ Settings
+              </button>
+            </div>
+          </div>
