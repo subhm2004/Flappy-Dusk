@@ -1165,3 +1165,49 @@ export default function FlappyDusk() {
 
       /* camera */
       let camY = reduceMotion ? CAM_Y : CAM_Y + Math.sin(now * 0.0006) * 0.06;
+      if (shakeAmt > 0) {
+        camera.position.x = CAM_X + (Math.random() - 0.5) * shakeAmt;
+        camY += (Math.random() - 0.5) * shakeAmt;
+        shakeAmt = Math.max(0, shakeAmt - d * 2.2);
+      } else {
+        camera.position.x = CAM_X;
+      }
+      camera.position.y = camY;
+
+      renderer.render(scene, camera);
+      rafId = requestAnimationFrame(frame);
+    }
+    rafId = requestAnimationFrame(frame);
+
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('pointerdown', action);
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('error', onErr);
+      document.removeEventListener('visibilitychange', onVisibility);
+      pauseBtnEl.removeEventListener('pointerdown', onPauseBtn);
+      muteBtnEl.removeEventListener('pointerdown', onMuteBtn);
+      pauseOverlayEl.removeEventListener('pointerdown', onPauseOverlay);
+      engineApiRef.current = null;
+      if (audio.ctx) {
+        try {
+          audio.ctx.close();
+        } catch {
+          /* ignore */
+        }
+      }
+      scene.clear();
+      renderer.dispose();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ================= overlays ================= */
+  const medal = medalFor(runStats.score);
+  const bestShown = Math.max(best, runStats.score);
+  const reviveCost = reviveCostFor(reviveCount);
+  const xpNeed = xpToNext(level);
+  const doneMissions = missions.filter((m) => m.done).length;
+
