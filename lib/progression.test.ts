@@ -38,3 +38,23 @@ describe('levels / xp', () => {
     expect(levelBaseSpeed(1, C.SPEED0)).toBe(C.SPEED0);
     expect(levelBaseSpeed(3, C.SPEED0)).toBeGreaterThan(C.SPEED0);
     expect(levelBaseSpeed(100, C.SPEED0)).toBeLessThanOrEqual(C.SPEED0 + 2.5 + 1e-9);
+  });
+});
+
+describe('daily missions', () => {
+  it('is deterministic for a given date seed', () => {
+    const a = generateDailyMissions(dateSeed(new Date(2026, 6, 11)));
+    const b = generateDailyMissions(dateSeed(new Date(2026, 6, 11)));
+    expect(a).toEqual(b);
+    expect(a).toHaveLength(3);
+  });
+
+  it('differs across days', () => {
+    const a = generateDailyMissions(dateSeed(new Date(2026, 6, 11)));
+    const b = generateDailyMissions(dateSeed(new Date(2026, 6, 12)));
+    expect(JSON.stringify(a)).not.toEqual(JSON.stringify(b));
+  });
+
+  it('todayKey formats as YYYY-MM-DD', () => {
+    expect(todayKey(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
