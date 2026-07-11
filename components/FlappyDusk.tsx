@@ -278,3 +278,50 @@ export default function FlappyDusk() {
 
   /* ---------- settings ---------- */
   function toggleSound() {
+    setSoundOn((v) => {
+      const n = !v;
+      lsSet(K.sound, n ? '1' : '0');
+      return n;
+    });
+  }
+  function toggleHaptics() {
+    setHapticsOn((v) => {
+      const n = !v;
+      lsSet(K.haptics, n ? '1' : '0');
+      return n;
+    });
+  }
+  function toggleEffects() {
+    setEffectsOn((v) => {
+      const n = !v;
+      lsSet(K.effects, n ? '1' : '0');
+      return n;
+    });
+  }
+  function resetProgress() {
+    if (typeof window !== 'undefined' && !window.confirm('Reset all progress?')) return;
+    [
+      K.best, K.coins, K.keys, K.stats, K.missions, K.missionsDate,
+      K.ach, K.level, K.xp, K.owned, K.skin,
+    ].forEach((k) => {
+      try {
+        window.localStorage.removeItem(k);
+      } catch {
+        /* ignore */
+      }
+    });
+    setBest(0);
+    setCoins(0);
+    setKeys(0);
+    setStats(EMPTY_STATS);
+    setUnlocked([]);
+    setLevel(1);
+    setXp(0);
+    setOwned([DEFAULT_SKIN]);
+    setSelected(DEFAULT_SKIN);
+    const m = generateDailyMissions(dateSeed());
+    setMissions(m);
+    persistJSON(K.missions, m);
+    lsSet(K.missionsDate, todayKey());
+    engineApiRef.current?.applySkin(skinById(DEFAULT_SKIN));
+    pushToast('Progress reset');
