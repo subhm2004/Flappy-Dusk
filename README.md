@@ -66,3 +66,37 @@ Under the pretty surface, it's built like a real game:
   animation never triggers a React re-render.
 - **React owns the meta-game** — currencies, shop, missions, levels, settings —
   and talks to the engine through a small ref bridge.
+
+---
+
+## Features
+
+### 🎮 Core gameplay
+- Fixed-timestep physics (120 Hz) with smooth rendering at display rate
+- Procedurally generated pipes from a seeded PRNG — runs are fully reproducible
+- Bird tilt, wing flapping, flap puffs, and a death tumble
+
+### 🪙 Coins & the bird shop
+- Coins float **inside the pipe gaps** — the edge ones make you fly close to a pipe
+- Spend lifetime coins in the **shop** to unlock 6 bird skins; the bird recolours live
+
+### 🔑 Rare blue keys & continues
+- Very rarely (~2% of pipes) a glowing **blue key** floats in a gap
+- On death, spend keys to **continue the same run** instead of ending it
+- The cost **escalates within a run**: `1 → 4 → 8 → 18 → 32 …`, so repeated saves hurt
+
+### ⚡ Power-ups
+
+| | Power-up | Effect |
+|---|---|---|
+| 🛡 | **Shield** | Absorbs one otherwise-fatal hit, plus a brief grace window |
+| 🧲 | **Magnet** | Pulls nearby coins toward the bird for 6s |
+| 🐢 | **Slow-mo** | Slows the world to 55% for 5s |
+| ⚡ | **Fast-mo** | Speeds the world to 160% for 5s — risk/reward |
+
+A live HUD shows active effects and their countdown.
+
+### 📈 Levels, missions & achievements
+- **Daily missions** — three date-seeded goals (collect coins, score N in a run,
+  grab power-ups, play N games …), each rewarding coins + XP
+- **Achievements** — 11 milestone unlocks (First Flight, High Flyer, Coin Hoarder,
