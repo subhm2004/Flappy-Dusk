@@ -1,0 +1,47 @@
+.scene {
+  position: fixed;
+  inset: 0;
+  display: block;
+}
+
+.layer {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+  color: var(--cream);
+}
+
+.hud {
+  justify-content: flex-start;
+  padding-top: 4vh;
+}
+
+.score {
+  font-size: clamp(44px, 9vw, 72px);
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 3px 0 rgba(160, 70, 60, 0.45), 0 10px 24px rgba(60, 20, 40, 0.25);
+  transition: transform 0.12s ease-out;
+  will-change: transform;
+}
+
+.pulse {
+  transform: scale(1.22);
+}
+
+/* ---------- coin counter (HUD, top-left) ---------- */
+.coinHud {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
