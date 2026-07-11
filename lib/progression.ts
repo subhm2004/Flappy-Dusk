@@ -112,3 +112,25 @@ export interface Mission {
 export function dateSeed(d = new Date()): number {
   const s = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
   let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/** `YYYY-MM-DD` key for today (used to detect a new day). */
+export function todayKey(d = new Date()): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/** Generates the day's 3 missions, deterministic for a given seed. */
+export function generateDailyMissions(seed: number): Mission[] {
+  const rng = makeRng(seed);
+  const pool = [...TEMPLATES];
+  // shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
