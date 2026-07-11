@@ -104,3 +104,38 @@ describe('createState', () => {
     expect(s.birdY).toBe(C.READY_Y);
     expect(s.birdVY).toBe(0);
     expect(s.score).toBe(0);
+    expect(s.coins).toBe(0);
+    expect(s.keys).toBe(0);
+    expect(s.baseSpeed).toBe(C.SPEED0);
+    expect(s.shield).toBe(false);
+    expect(s.magnetT).toBe(0);
+    expect(s.slowT).toBe(0);
+    expect(s.fastT).toBe(0);
+    expect(s.pipes.length).toBeGreaterThan(0);
+    expect(
+      s.pipes.every((p) => !p.scored && !p.coinTaken && !p.keyTaken && !p.powerTaken),
+    ).toBe(true);
+  });
+
+  it('is fully deterministic given a seed (including coins)', () => {
+    const a = createState(42);
+    const b = createState(42);
+    const strip = (s: State) => s.pipes.map((p) => ({ ...p }));
+    expect(strip(a)).toEqual(strip(b));
+  });
+
+  it('places every pickup inside its pipe gap', () => {
+    const s = createState(2024);
+    for (const p of s.pipes) {
+      const top = p.gapY + C.GAP / 2;
+      const bot = p.gapY - C.GAP / 2;
+      if (p.coin) {
+        expect(p.coinY - C.COIN_R).toBeGreaterThanOrEqual(bot - 1e-9);
+        expect(p.coinY + C.COIN_R).toBeLessThanOrEqual(top + 1e-9);
+      }
+      if (p.key) {
+        expect(p.keyY - C.KEY_R).toBeGreaterThanOrEqual(bot - 1e-9);
+        expect(p.keyY + C.KEY_R).toBeLessThanOrEqual(top + 1e-9);
+      }
+    }
+  });
