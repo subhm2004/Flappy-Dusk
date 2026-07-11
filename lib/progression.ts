@@ -157,3 +157,26 @@ export function advanceMissions(missions: Mission[], run: RunStats): Mission[] {
     if (m.done) return m;
     let progress = m.progress;
     if (m.metric === 'coins') progress += run.coins;
+    else if (m.metric === 'keys') progress += run.keys;
+    else if (m.metric === 'powerups') progress += run.powerups;
+    else if (m.metric === 'runs') progress += 1;
+    else if (m.metric === 'score') progress = Math.max(progress, run.score);
+    progress = Math.min(progress, m.target);
+    return { ...m, progress, done: progress >= m.target };
+  });
+}
+
+/* ---------------- achievements ---------------- */
+
+export interface Achievement {
+  id: string;
+  label: string;
+  desc: string;
+  rewardCoins: number;
+  rewardXp: number;
+  test: (s: LifetimeStats, level: number, ownedSkins: number) => boolean;
+}
+
+export const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first', label: 'First Flight', desc: 'Play your first game', rewardCoins: 10, rewardXp: 20, test: (s) => s.runs >= 1 },
+  { id: 'score10', label: 'Getting Air', desc: 'Score 10 in a run', rewardCoins: 20, rewardXp: 40, test: (s) => s.bestScore >= 10 },
