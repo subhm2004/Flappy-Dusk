@@ -350,3 +350,38 @@ describe('step', () => {
     s.status = 'playing';
     const before = s.birdVY;
     step(s, C.DT);
+    expect(s.birdVY).toBeLessThan(before);
+  });
+
+  it('clamps the bird at the ceiling', () => {
+    const s = createState(1);
+    s.status = 'playing';
+    s.birdY = C.CEIL_Y;
+    s.birdVY = C.FLAP_VY;
+    step(s, C.DT);
+    expect(s.birdY + C.BIRD_R).toBeLessThanOrEqual(C.CEIL_Y + 1e-9);
+  });
+
+  it('kills the bird on the ground', () => {
+    const s = createState(1);
+    s.status = 'playing';
+    s.birdY = C.GROUND_Y;
+    s.birdVY = -5;
+    const ev = step(s, C.DT);
+    expect(ev.died).toBe(true);
+    expect(s.status).toBe('dead');
+  });
+
+  it('does not score or move pipes once dead', () => {
+    const s = createState(1);
+    s.status = 'dead';
+    const xs = s.pipes.map((p) => p.x);
+    const ev = step(s, C.DT);
+    expect(ev.scored).toBe(0);
+    expect(s.pipes.map((p) => p.x)).toEqual(xs);
+  });
+
+  it('produces identical results for identical seeds and inputs', () => {
+    const a = simulate(77, 6, 24);
+    const b = simulate(77, 6, 24);
+    expect(a.scored).toBe(b.scored);
