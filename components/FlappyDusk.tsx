@@ -1491,3 +1491,50 @@ export default function FlappyDusk() {
               Close
             </button>
           </div>
+        </div>
+      )}
+
+      {/* settings */}
+      {panel === 'settings' && (
+        <div
+          className={styles.layer}
+          style={{ pointerEvents: 'auto', zIndex: 10, background: 'rgba(42,31,61,0.6)' }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            setPanel('none');
+          }}
+        >
+          <div className={styles.shopPanel} onPointerDown={(e) => e.stopPropagation()}>
+            <div className={styles.shopHead}>
+              <span>Settings</span>
+            </div>
+            <div className={styles.settingRow}>
+              <span>Sound</span>
+              <button
+                type="button"
+                className={`${styles.toggle} ${soundOn ? styles.toggleOn : ''}`}
+                onClick={toggleSound}
+              >
+                {soundOn ? 'On' : 'Off'}
+              </button>
+            </div>
+            <div className={styles.settingRow}>
+              <span>Haptics (vibration)</span>
+              <button
+                type="button"
+                className={`${styles.toggle} ${hapticsOn ? styles.toggleOn : ''}`}
+                onClick={toggleHaptics}
+              >
+                {hapticsOn ? 'On' : 'Off'}
+              </button>
+            </div>
+            <div className={styles.settingRow}>
+              <span>Screen effects</span>
+              <button
+                type="button"
+                className={`${styles.toggle} ${effectsOn ? styles.toggleOn : ''}`}
+                onClick={toggleEffects}
+              >
+                {effectsOn ? 'On' : 'Off'}
+              </button>
+            </div>
