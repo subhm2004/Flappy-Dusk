@@ -1,4 +1,4 @@
-import { integer, pgTable, real, serial, text, timestamp, index } from 'drizzle-orm/pg-core';
+import { bigint, integer, pgTable, real, serial, text, timestamp, index } from 'drizzle-orm/pg-core';
 
 /** One row per Google account that has signed in. */
 export const users = pgTable('users', {
@@ -27,8 +27,14 @@ export const runs = pgTable(
     keys: integer('keys').notNull(),
     seconds: real('seconds').notNull(),
 
-    /** The inputs the score was derived from — kept so a run can be re-checked. */
-    seed: integer('seed').notNull(),
+    /**
+     * The inputs the score was derived from — kept so a run can be re-checked.
+     *
+     * The seed is an unsigned 32-bit value, which runs past what Postgres's
+     * `integer` can hold (2^31-1). Anything above that has to be a bigint, or
+     * every other run is rejected with "out of range for type integer".
+     */
+    seed: bigint('seed', { mode: 'number' }).notNull(),
     baseSpeed: real('base_speed').notNull(),
     steps: integer('steps').notNull(),
 

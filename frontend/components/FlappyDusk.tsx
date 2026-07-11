@@ -284,12 +284,19 @@ export default function FlappyDusk() {
 
     setRunStats({ score: info.score, coins: info.runCoins, keys: info.runKeys });
     // Send the run's inputs up for ranking. We post what happened, not what we
-    // scored — the server replays it and decides. Revived runs carry no replay,
-    // because a revive rebuilds the field and the inputs stop reproducing it.
-    if (apiEnabled && getToken() && info.replay && info.score > 0) {
-      api.submitRun(info.replay).catch(() => {
-        // A rejected or unreachable leaderboard must never spoil the run.
-      });
+    // scored — the server replays it and decides.
+    if (apiEnabled && getToken() && info.score > 0) {
+      if (!info.replay) {
+        // A revive rebuilds the pipe field mid-run, so the recorded inputs stop
+        // reproducing it and there'd be nothing for the server to verify.
+        pushToast('Revived runs are not ranked');
+      } else {
+        api.submitRun(info.replay).catch(() => {
+          // Silently dropping this is how a beaten record quietly fails to show
+          // up on the leaderboard. Say so instead.
+          pushToast("Couldn't post that run to the leaderboard");
+        });
+      }
     }
 
     setPhase('dead');

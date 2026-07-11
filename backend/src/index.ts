@@ -11,12 +11,21 @@ const app = Fastify({
 });
 
 await app.register(cors, {
-  origin: [
-    env.WEB_APP_URL,
-    // The Android WebView serves the game from this origin (androidScheme: https).
-    'https://localhost',
-    'http://localhost:3000',
-  ],
+  origin: (origin, cb) => {
+    // Same-origin and non-browser callers (curl, the APK's fetch) send no Origin.
+    if (!origin) return cb(null, true);
+
+    // The Android WebView serves the game from https://localhost.
+    if (origin === env.WEB_APP_URL || origin === 'https://localhost') return cb(null, true);
+
+    // Any localhost port in development: Next quietly moves to 3001 when 3000 is
+    // taken, and a hard-coded port turns that into a silent CORS failure.
+    if (env.NODE_ENV === 'development' && /^http:\/\/localhost:\d+$/.test(origin)) {
+      return cb(null, true);
+    }
+
+    return cb(new Error('origin not allowed'), false);
+  },
 });
 
 app.get('/health', async () => ({ ok: true }));
