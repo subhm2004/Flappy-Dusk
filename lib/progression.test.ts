@@ -58,3 +58,23 @@ describe('daily missions', () => {
   it('todayKey formats as YYYY-MM-DD', () => {
     expect(todayKey(new Date(2026, 0, 5))).toBe('2026-01-05');
   });
+
+  it('advances progress and eventually marks completion', () => {
+    // one big run finishes coins/keys/powerups/score missions; the "runs"
+    // mission (metric = games played) needs several runs, so advance enough.
+    const big: RunStats = { score: 999, coins: 999, keys: 999, powerups: 999 };
+    let cur = generateDailyMissions(1);
+    for (let i = 0; i < 12; i++) cur = advanceMissions(cur, big);
+    expect(cur.every((m) => m.done)).toBe(true);
+    expect(cur.every((m) => m.progress <= m.target)).toBe(true);
+  });
+
+  it('does not regress a completed mission', () => {
+    const big: RunStats = { score: 999, coins: 999, keys: 999, powerups: 999 };
+    let done = generateDailyMissions(2);
+    for (let i = 0; i < 12; i++) done = advanceMissions(done, big);
+    expect(done.every((m) => m.done)).toBe(true);
+    const again = advanceMissions(done, { score: 0, coins: 0, keys: 0, powerups: 0 });
+    expect(again).toEqual(done);
+  });
+});
