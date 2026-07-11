@@ -21,3 +21,26 @@ export function levelBaseSpeed(level: number, speed0: number): number {
 /** Adds XP and rolls over into levels. Returns the new level/xp and how many
  *  levels were gained (for a toast). */
 export function addXp(
+  level: number,
+  xp: number,
+  gained: number,
+): { level: number; xp: number; leveledUp: number } {
+  let lv = level;
+  let cur = xp + gained;
+  let ups = 0;
+  while (cur >= xpToNext(lv)) {
+    cur -= xpToNext(lv);
+    lv += 1;
+    ups += 1;
+  }
+  return { level: lv, xp: cur, leveledUp: ups };
+}
+
+/* ---------------- run + lifetime stats ---------------- */
+
+/** Totals for a single completed run, reported by the engine. */
+export interface RunStats {
+  score: number;
+  coins: number;
+  keys: number;
+  powerups: number;
