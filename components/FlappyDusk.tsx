@@ -1071,3 +1071,50 @@ export default function FlappyDusk() {
       lastT = now;
 
       pauseBtnEl!.style.display = state.status === 'playing' ? 'flex' : 'none';
+      const soundIcon = soundRef.current ? '🔊' : '🔇';
+      if (soundIcon !== lastSoundIcon) {
+        muteBtnEl!.textContent = soundIcon;
+        lastSoundIcon = soundIcon;
+      }
+
+      if (paused) {
+        renderer.render(scene, camera);
+        rafId = requestAnimationFrame(frame);
+        return;
+      }
+
+      acc += d;
+      while (acc >= C.DT) {
+        const ev = step(state, C.DT);
+        if (ev.scored > 0) {
+          setScore(state.score);
+          sfx.score();
+        }
+        if (ev.coined > 0) {
+          setCoinsHud(state.coins);
+          sfx.coin();
+          vibrate(10);
+        }
+        if (ev.keyed > 0) {
+          sfx.key();
+          vibrate([0, 20, 30, 25]);
+        }
+        if (ev.powered > 0) {
+          runPowerups += ev.powered;
+          sfx.power();
+          vibrate([0, 15, 20, 15]);
+        }
+        if (ev.shieldUsed) {
+          sfx.shield();
+          vibrate(30);
+          if (effectsOK()) shakeAmt = Math.max(shakeAmt, 0.3);
+        }
+        if (ev.died) triggerDeath();
+        acc -= C.DT;
+      }
+
+      /* bird */
+      bird.position.y = state.birdY;
+      if (state.status === 'dead') {
+        if (state.birdY > C.GROUND_Y + C.BIRD_R + 0.01) bird.rotation.z -= 5.5 * d;
+      } else {
