@@ -1025,3 +1025,49 @@ export default function FlappyDusk() {
       if (e.code === 'KeyM') {
         e.preventDefault();
         if (!e.repeat) onToggleSoundRef.current();
+        return;
+      }
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+        e.preventDefault();
+        if (!e.repeat) action();
+      }
+    }
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    function onVisibility() {
+      if (document.hidden && state.status === 'playing') setPaused(true);
+    }
+    function onErr(e: ErrorEvent) {
+      if (e && e.message) showFatal('Something went wrong while running the game: ' + e.message);
+    }
+    function onPauseBtn(e: Event) {
+      e.stopPropagation();
+      togglePause();
+    }
+    function onMuteBtn(e: Event) {
+      e.stopPropagation();
+      onToggleSoundRef.current();
+    }
+    function onPauseOverlay(e: Event) {
+      e.stopPropagation();
+      setPaused(false);
+    }
+    window.addEventListener('pointerdown', action);
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('error', onErr);
+    document.addEventListener('visibilitychange', onVisibility);
+    pauseBtnEl.addEventListener('pointerdown', onPauseBtn);
+    muteBtnEl.addEventListener('pointerdown', onMuteBtn);
+    pauseOverlayEl.addEventListener('pointerdown', onPauseOverlay);
+
+    /* loop */
+    function frame(now: number) {
+      if (disposed) return;
+      const d = Math.min(0.05, (now - lastT) / 1000);
+      lastT = now;
+
+      pauseBtnEl!.style.display = state.status === 'playing' ? 'flex' : 'none';
