@@ -652,3 +652,49 @@ export default function FlappyDusk() {
         color: 0xffd24d,
         metalness: 0.35,
         roughness: 0.35,
+        emissive: 0x5a3d00,
+        emissiveIntensity: 0.35,
+      });
+      for (let i = 0; i < POOL; i++) {
+        const cm = new THREE.Mesh(coinGeo, coinMat);
+        cm.castShadow = true;
+        cm.visible = false;
+        coinPool.push(cm);
+        scene.add(cm);
+      }
+    }
+
+    /* key pool (rare, blue) */
+    const keyPool: THREE.Group[] = [];
+    {
+      const keyMat = new THREE.MeshStandardMaterial({
+        color: 0x37b6ff,
+        metalness: 0.5,
+        roughness: 0.22,
+        emissive: 0x0c3f70,
+        emissiveIntensity: 0.55,
+      });
+      const ringGeo = new THREE.TorusGeometry(0.15, 0.055, 12, 22);
+      const shaftGeo = new THREE.BoxGeometry(0.09, 0.42, 0.09);
+      const toothGeo = new THREE.BoxGeometry(0.12, 0.07, 0.08);
+      for (let i = 0; i < POOL; i++) {
+        const grp = new THREE.Group();
+        const ring = new THREE.Mesh(ringGeo, keyMat);
+        ring.position.y = 0.2;
+        const shaft = new THREE.Mesh(shaftGeo, keyMat);
+        shaft.position.y = -0.06;
+        const tooth1 = new THREE.Mesh(toothGeo, keyMat);
+        tooth1.position.set(0.09, -0.16, 0);
+        const tooth2 = new THREE.Mesh(toothGeo, keyMat);
+        tooth2.position.set(0.09, -0.25, 0);
+        [ring, shaft, tooth1, tooth2].forEach((m) => {
+          m.castShadow = true;
+          grp.add(m);
+        });
+        grp.visible = false;
+        keyPool.push(grp);
+        scene.add(grp);
+      }
+    }
+
+    /* power-up pool (billboard sprites with drawn icons) */
