@@ -1,3 +1,5 @@
+// drizzle-kit runs outside the server, so it has to load .env itself.
+import 'dotenv/config';
 import type { Config } from 'drizzle-kit';
 
 export default {
