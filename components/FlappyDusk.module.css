@@ -926,3 +926,49 @@
 }
 
 .statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 6px;
+  border-radius: 14px;
+  background: rgba(255, 250, 243, 0.14);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+.statVal {
+  font-size: 19px;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-shadow: 0 2px 6px rgba(60, 20, 40, 0.4);
+}
+
+.statVal .coinIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.statLbl {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--cream);
+  opacity: 0.72;
+}
+
+.home .xpBar {
+  margin-top: 14px;
+  width: 100%;
+}
+
+.playBtn {
+  pointer-events: auto;
+  margin-top: 22px;
+  width: 100%;
+  border: none;
+  border-radius: 18px;
+  padding: 18px;
