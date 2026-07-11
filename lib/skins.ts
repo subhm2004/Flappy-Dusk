@@ -16,3 +16,21 @@ export interface Skin {
 }
 
 export const SKINS: Skin[] = [
+  {
+    id: 'coral',
+    name: 'Coral',
+    cost: 0,
+    body: 0xff6f59,
+    wing: 0xe4543f,
+    belly: 0xffe7cc,
+    beak: 0xffb13d,
+    tail: 0xe4543f,
+  },
+  {
+    id: 'sky',
+    name: 'Bluebird',
+    cost: 30,
+    body: 0x5ba8ff,
+    wing: 0x3e7fd0,
+    belly: 0xe9f3ff,
+    beak: 0xffb13d,
