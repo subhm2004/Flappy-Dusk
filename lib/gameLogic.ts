@@ -304,3 +304,29 @@ export function step(s: State, dt: number): StepEvent {
     const p = s.pipes[j];
     if (!p.scored && p.x + C.PIPE_R < C.BIRD_X - C.BIRD_R) {
       p.scored = true;
+      s.score += 1;
+      ev.scored += 1;
+      s.speed = Math.min(C.SPEED_MAX, s.baseSpeed + s.score * C.SPEED_RAMP);
+    }
+
+    let coinHit = collectsCoin(s.birdY, p);
+    if (!coinHit && magnetOn && p.coin && !p.coinTaken) {
+      coinHit =
+        Math.abs(C.BIRD_X - p.x) < C.MAGNET_REACH_X &&
+        Math.abs(s.birdY - p.coinY) < C.MAGNET_REACH_Y;
+    }
+    if (coinHit) {
+      p.coinTaken = true;
+      s.coins += 1;
+      ev.coined += 1;
+    }
+
+    if (collectsKey(s.birdY, p)) {
+      p.keyTaken = true;
+      s.keys += 1;
+      ev.keyed += 1;
+    }
+
+    if (collectsPower(s.birdY, p)) {
+      p.powerTaken = true;
+      applyPower(s, p.powerType);
