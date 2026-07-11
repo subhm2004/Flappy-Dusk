@@ -138,3 +138,49 @@
   }
 }
 
+/* ---------- game over panel ---------- */
+.panel {
+  background: rgba(255, 250, 243, 0.93);
+  border-radius: 22px;
+  padding: 26px 40px;
+  color: var(--plum);
+  box-shadow: 0 18px 50px rgba(60, 20, 40, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.medal {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin: 0 auto 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: rgba(90, 40, 30, 0.55);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(60, 20, 40, 0.3);
+}
+
+.medalLabel {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  opacity: 0.75;
+  margin-bottom: 12px;
+}
+
+.head {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  opacity: 0.65;
+}
+
+.num {
+  font-size: clamp(40px, 8vw, 64px);
+  font-weight: 800;
+  color: var(--coral);
+  line-height: 1.05;
+}
