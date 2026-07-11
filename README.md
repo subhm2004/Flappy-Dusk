@@ -21,6 +21,16 @@
   <img alt="License" src="https://img.shields.io/badge/license-MIT-FF6F59">
 </p>
 
+<p align="center">
+  <a href="https://flappy-dusk.vercel.app">
+    <img alt="Play now" src="https://img.shields.io/badge/▶%20Play%20now-in%20your%20browser-FF6F59?style=for-the-badge">
+  </a>
+  &nbsp;
+  <a href="https://github.com/subhm2004/Flappy-Dusk/releases/latest/download/flappy-dusk.apk">
+    <img alt="Download APK" src="https://img.shields.io/badge/⬇%20Download-Android%20APK-3FA070?style=for-the-badge&logo=android&logoColor=white">
+  </a>
+</p>
+
 ---
 
 ## Demo
@@ -31,6 +41,35 @@
 
 > The GIF above is a **stylized preview** of the game loop. To drop in a real
 > screen recording, see [Recording your own demo](#recording-your-own-demo).
+
+---
+
+## Download & play
+
+**🌐 In the browser** — [flappy-dusk.vercel.app](https://flappy-dusk.vercel.app).
+Nothing to install; your progress is saved locally in the browser.
+
+**🤖 On Android** — grab
+[**flappy-dusk.apk**](https://github.com/subhm2004/Flappy-Dusk/releases/latest/download/flappy-dusk.apk)
+from the [latest release](https://github.com/subhm2004/Flappy-Dusk/releases/latest).
+It's the same game running in a native shell, so it works fully offline.
+
+<details>
+<summary>Installing the APK on your phone</summary>
+
+<br>
+
+1. Open the download link above on the phone (or copy the `.apk` across).
+2. Tap the file. Android will ask you to allow **Install unknown apps** for
+   whichever app you opened it from — Chrome, Files, whatever. Allow it.
+3. Play Protect will warn you as well. Tap **Install anyway**.
+
+Both prompts are expected. The APK is **debug-signed**, not distributed through
+the Play Store — fine for playing yourself and sharing with friends. See
+[DEPLOYMENT.md](DEPLOYMENT.md#release-signing) for what a store-grade build
+would need.
+
+</details>
 
 ---
 
@@ -182,7 +221,15 @@ lib/
 docs/
   banner.svg              README hero
   demo.gif                Gameplay preview
+.github/workflows/
+  ci.yml                  Typecheck + tests + build on every push and PR
+  android.yml             Builds the APK; attaches it to v* releases
+capacitor.config.ts       Wraps the static export in the Android WebView shell
+DEPLOYMENT.md             Web hosting, APK builds, signing, troubleshooting
 ```
+
+> `android/` isn't committed — Capacitor regenerates it from
+> `capacitor.config.ts` on every build, so there's no native project to drift.
 
 ---
 
@@ -254,16 +301,29 @@ npm test
 
 ## Deploying
 
-Zero-config on [Vercel](https://vercel.com):
+The game is fully client-side, so `npm run build` emits a static bundle to
+`out/` — and that one bundle is everything that ships, to both targets:
 
-```bash
-npm i -g vercel
-vercel          # preview deploy
-vercel --prod   # production
+```
+out/  ──┬──▶  a static host (Vercel)          ──▶  flappy-dusk.vercel.app
+        └──▶  a Capacitor WebView + Gradle    ──▶  flappy-dusk.apk
 ```
 
-Or push to GitHub and import the repo at [vercel.com/new](https://vercel.com/new)
-— the framework is auto-detected, no settings needed.
+**Web** — zero config on [Vercel](https://vercel.com/new); import the repo and
+deploy. Every push to `main` redeploys.
+
+**Android** — GitHub Actions builds the APK, so you don't need Android Studio or
+the SDK locally. Trigger it from
+[Actions → Android APK → Run workflow](https://github.com/subhm2004/Flappy-Dusk/actions/workflows/android.yml),
+or tag a version to publish it as a release:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Netlify, GitHub Pages, local APK builds, and release signing are all covered in
+**[DEPLOYMENT.md](DEPLOYMENT.md)**.
 
 ---
 
