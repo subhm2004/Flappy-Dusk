@@ -11,6 +11,10 @@ concurrency:
   group: android-${{ github.ref }}
   cancel-in-progress: true
 
+# Creating the release needs write access; the default token may be read-only.
+permissions:
+  contents: write
+
 jobs:
   apk:
     name: Build debug APK
