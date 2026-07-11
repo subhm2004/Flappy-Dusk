@@ -372,3 +372,49 @@ export default function FlappyDusk() {
     engineApiRef.current?.revive();
   }
 
+  /* ================= the engine ================= */
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const scoreEl = scoreRef.current;
+    const coinCountEl = coinCountRef.current;
+    const pauseBtnEl = pauseBtnRef.current;
+    const muteBtnEl = muteBtnRef.current;
+    const pauseOverlayEl = pauseOverlayRef.current;
+    const powerHudEl = powerHudRef.current;
+    const fxEl = fxRef.current;
+    const flashEl = flashRef.current;
+    const fatalEl = fatalRef.current;
+    const fatalMsgEl = fatalMsgRef.current;
+    if (
+      !canvas || !scoreEl || !coinCountEl || !pauseBtnEl || !muteBtnEl ||
+      !pauseOverlayEl || !powerHudEl || !fxEl || !flashEl || !fatalEl || !fatalMsgEl
+    ) {
+      return;
+    }
+
+    let disposed = false;
+    let rafId = 0;
+
+    function showFatal(msg: string) {
+      fatalMsgEl!.textContent = msg;
+      fatalEl!.style.display = 'flex';
+    }
+
+    const anyTHREE = THREE as unknown as { SRGBColorSpace?: unknown; sRGBEncoding?: unknown };
+    const reduceMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function vibrate(pattern: number | number[]) {
+      if (!hapticsRef.current) return;
+      try {
+        if ('vibrate' in navigator) navigator.vibrate(pattern);
+      } catch {
+        /* optional */
+      }
+    }
+    function effectsOK() {
+      return effectsRef.current && !reduceMotion;
+    }
+
+    const CAM_X = -2.2;
