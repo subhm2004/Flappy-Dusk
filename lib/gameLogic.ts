@@ -228,3 +228,28 @@ export function collide(birdY: number, pipe: Pipe): boolean {
   const bot = pipe.gapY - C.GAP / 2;
   return birdY + C.BIRD_R > top || birdY - C.BIRD_R < bot;
 }
+
+export function collectsCoin(birdY: number, pipe: Pipe): boolean {
+  if (!pipe.coin || pipe.coinTaken) return false;
+  const reach = C.COIN_R + C.BIRD_R;
+  return Math.abs(C.BIRD_X - pipe.x) < reach && Math.abs(birdY - pipe.coinY) < reach;
+}
+
+export function collectsKey(birdY: number, pipe: Pipe): boolean {
+  if (!pipe.key || pipe.keyTaken) return false;
+  const reach = C.KEY_R + C.BIRD_R;
+  return Math.abs(C.BIRD_X - pipe.x) < reach && Math.abs(birdY - pipe.keyY) < reach;
+}
+
+export function collectsPower(birdY: number, pipe: Pipe): boolean {
+  if (!pipe.power || pipe.powerTaken) return false;
+  const reach = C.POWER_R + C.BIRD_R;
+  return Math.abs(C.BIRD_X - pipe.x) < reach && Math.abs(birdY - pipe.powerY) < reach;
+}
+
+/**
+ * Advances the simulation by `dt` seconds and returns events for the renderer.
+ */
+export function step(s: State, dt: number): StepEvent {
+  const ev: StepEvent = {
+    scored: 0,
