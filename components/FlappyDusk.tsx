@@ -138,3 +138,50 @@ export default function FlappyDusk() {
   const levelRef = useRef(level);
   const soundRef = useRef(soundOn);
   const hapticsRef = useRef(hapticsOn);
+  const effectsRef = useRef(effectsOn);
+  const uiBlockRef = useRef(false);
+  const onPhaseRef = useRef<(p: Phase) => void>(() => {});
+  const onRunEndRef = useRef<(info: RunEndInfo) => void>(() => {});
+  const onToggleSoundRef = useRef<() => void>(() => {});
+
+  const toastId = useRef(0);
+  function pushToast(text: string) {
+    const id = ++toastId.current;
+    setToasts((t) => [...t, { id, text }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600);
+  }
+
+  /* keep bridge refs fresh every render */
+  skinRef.current = skinById(selected);
+  levelRef.current = level;
+  soundRef.current = soundOn;
+  hapticsRef.current = hapticsOn;
+  effectsRef.current = effectsOn;
+  uiBlockRef.current = panel !== 'none';
+  onPhaseRef.current = (p) => setPhase(p);
+  onToggleSoundRef.current = () => toggleSound();
+
+  onRunEndRef.current = (info) => {
+    const run: RunStats = {
+      score: info.score,
+      coins: info.dCoins,
+      keys: info.dKeys,
+      powerups: info.dPowerups,
+    };
+    let bonusCoins = 0;
+    let bonusXp = 0;
+
+    const after = advanceMissions(missions, run);
+    after.forEach((m, i) => {
+      if (m.done && !missions[i].done) {
+        bonusCoins += m.rewardCoins;
+        bonusXp += m.rewardXp;
+        pushToast(`✅ ${m.label}`);
+      }
+    });
+
+    const newStats = foldRun(stats, run);
+
+    const unlocks = newlyUnlocked(unlocked, newStats, level, owned.length);
+    unlocks.forEach((a) => {
+      bonusCoins += a.rewardCoins;
