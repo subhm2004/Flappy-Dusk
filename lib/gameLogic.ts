@@ -151,3 +151,29 @@ function makePipe(x: number, gapY: number, rng: () => number): Pipe {
     powerY: y,
     powerTaken: false,
   };
+}
+
+function buildField(rng: () => number): Pipe[] {
+  const pipes: Pipe[] = [];
+  let gy = 5.1;
+  for (let x = C.FIRST_PIPE_X; x <= C.SPAWN_X; x += C.PIPE_SPACING) {
+    gy = nextGapY(gy, rng);
+    pipes.push(makePipe(x, gy, rng));
+  }
+  return pipes;
+}
+
+export function createState(seed?: number, baseSpeed?: number): State {
+  const rng = makeRng(seed === undefined ? Date.now() & 0xffffffff : seed);
+  const bs = baseSpeed === undefined ? C.SPEED0 : baseSpeed;
+  return {
+    status: 'ready',
+    time: 0,
+    birdY: C.READY_Y,
+    birdVY: 0,
+    pipes: buildField(rng),
+    speed: bs,
+    baseSpeed: bs,
+    score: 0,
+    coins: 0,
+    keys: 0,
