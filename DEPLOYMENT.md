@@ -113,3 +113,32 @@ go further.
 
 ### Build the APK locally (optional)
 
+Only needed if you want to change native Android bits.
+
+Requires JDK 17 and the Android SDK (easiest via Android Studio).
+
+```bash
+npm run build          # export -> out/
+npx cap add android    # scaffold android/ (regenerated, not committed)
+npx cap sync android   # copy out/ into the native project
+cd android && ./gradlew assembleDebug
+# -> android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+`android/` is in `.gitignore` on purpose. It is generated from
+`capacitor.config.ts` every time, so there is no native project to drift out of
+sync — change the config, not the generated folder.
+
+### Release signing
+
+The CI build produces a **debug-signed** APK. That's deliberate: a release key
+must not live in the repo. To ship a Play-Store-grade build you would:
+
+1. Generate a keystore (`keytool -genkey -v -keystore release.jks ...`).
+2. Add it plus its passwords to GitHub → Settings → Secrets and variables →
+   Actions (base64 the `.jks`).
+3. Have the workflow decode the keystore, write `android/keystore.properties`,
+   and run `./gradlew assembleRelease` instead of `assembleDebug`.
+
+Not wired up here, since a debug APK is all you need to sideload and play.
+
