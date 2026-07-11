@@ -202,3 +202,37 @@ const event = step(state, 1 / 120);
 Because it's pure and deterministic, the exact code that ships is the code the
 tests exercise — collision math, pickup placement, power-up timers, and the
 shield/revive rules included.
+
+### The renderer — `components/FlappyDusk.tsx`
+
+A single `useEffect` builds the scene, runs the loop, and tears everything down on
+unmount (cancels the animation frame, removes listeners, disposes the WebGL
+renderer) — so it survives React Strict Mode's dev-time double-mount cleanly.
+
+The loop steps the pure core at a fixed `1/120s` and renders at display rate:
+
+```
+accumulator += dt
+while (accumulator >= 1/120) { step(state, 1/120); accumulator -= 1/120 }
+renderer.render(scene, camera)
+```
+
+### The React ↔ engine bridge
+
+The 120 Hz loop must **never** cause a re-render, so React and the engine talk
+through refs:
+
+| Direction | What flows |
+|---|---|
+| **React → engine** | selected skin, player level (→ base speed), sound / haptics / effects settings |
+| **Engine → React** | phase changes, and a run-end report (score + coin/key/power-up **deltas**) |
+
+Run stats are reported as **deltas** since the last report, so continuing a run
+with a key can't double-count coins or mission progress.
+
+---
+
+## Testing
+
+The game core and progression system are pure, so they're tested headlessly — no
+browser, no DOM:
