@@ -280,3 +280,38 @@ describe('power-ups', () => {
     const normal = createState(1);
     normal.status = 'playing';
     const fast = createState(1);
+    fast.status = 'playing';
+    fast.fastT = C.FAST_TIME;
+    const x0 = normal.pipes[0].x;
+    step(normal, C.DT);
+    step(fast, C.DT);
+    expect(x0 - fast.pipes[0].x).toBeGreaterThan(x0 - normal.pipes[0].x);
+  });
+
+  it('power-up timers count down and expire', () => {
+    const s = createState(1);
+    s.status = 'playing';
+    s.magnetT = 2 * C.DT;
+    step(s, C.DT);
+    expect(s.magnetT).toBeGreaterThan(0);
+    step(s, C.DT);
+    expect(s.magnetT).toBe(0);
+  });
+});
+
+describe('baseSpeed / level', () => {
+  it('defaults to SPEED0', () => {
+    const s = createState(1);
+    expect(s.baseSpeed).toBe(C.SPEED0);
+    expect(s.speed).toBe(C.SPEED0);
+  });
+
+  it('accepts a raised base speed and ramps from it', () => {
+    const s = createState(1, 7);
+    expect(s.baseSpeed).toBe(7);
+    expect(s.speed).toBe(7);
+    s.status = 'playing';
+    // force a score by placing a pipe just past the bird
+    s.pipes = [mkPipe({ x: C.BIRD_X - C.PIPE_R - C.BIRD_R - 0.1, gapY: C.READY_Y })];
+    s.birdY = C.READY_Y;
+    step(s, C.DT);
