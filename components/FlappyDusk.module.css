@@ -323,3 +323,49 @@
 }
 
 .btn:active {
+  transform: scale(0.96);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  box-shadow: none;
+}
+
+.btnKey {
+  color: #fff;
+  background: linear-gradient(180deg, #ffcf5a, #e0a22b);
+}
+
+.btnKey:disabled {
+  background: rgba(255, 250, 243, 0.4);
+  color: var(--plum);
+}
+
+.deadBtns {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(320px, 78vw);
+}
+
+.keyRun {
+  margin-left: 10px;
+}
+
+/* ---------- shop panel ---------- */
+.shopPanel {
+  pointer-events: auto;
+  width: min(440px, 90vw);
+  max-height: 82vh;
+  overflow-y: auto;
+  background: rgba(255, 250, 243, 0.97);
+  color: var(--plum);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 22px 60px rgba(60, 20, 40, 0.45);
+}
+
+.shopHead {
+  display: flex;
