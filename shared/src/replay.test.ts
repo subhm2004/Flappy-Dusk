@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { C, createState, flap, step } from './gameLogic.js';
+import { C, createState, flap, revive, step } from './gameLogic.js';
 import { levelBaseSpeed } from './progression.js';
-import { MAX_STEPS, allowedBaseSpeeds, replayRun, type RunSubmission } from './replay.js';
+import {
+  MAX_REVIVES,
+  MAX_STEPS,
+  allowedBaseSpeeds,
+  replayRun,
+  type RunSubmission,
+} from './replay.js';
 
 /**
  * Plays a run the way the browser does — fixed steps, flap between them — and
@@ -28,9 +34,44 @@ function playRun(
   }
 
   return {
-    sub: { seed, baseSpeed, steps, flaps },
+    sub: { seed, baseSpeed, steps, flaps, revives: [] },
     score: state.score,
     coins: state.coins,
+  };
+}
+
+/**
+ * Plays until death, spends a continue, and keeps going — exactly what the game
+ * does when you pay keys on the game-over screen.
+ */
+function playWithRevives(seed: number, allowed: number) {
+  const state = createState(seed, C.SPEED0);
+  const flaps: number[] = [];
+  const revives: number[] = [];
+  let steps = 0;
+
+  for (let i = 0; i < MAX_STEPS; i++) {
+    if (state.status === 'dead') {
+      if (revives.length >= allowed) break;
+      revive(state);
+      revives.push(i);
+    }
+
+    // aim for the next gap so the run actually scores
+    const next = state.pipes.find((p) => !p.scored && p.x > C.BIRD_X - 1);
+    const target = next ? next.gapY + 0.2 : C.CEIL_Y / 2;
+    if (state.status === 'ready' || state.birdY < target) {
+      flap(state);
+      flaps.push(i);
+    }
+
+    steps = i + 1;
+    step(state, C.DT);
+  }
+
+  return {
+    sub: { seed, baseSpeed: C.SPEED0, steps, flaps, revives } as RunSubmission,
+    score: state.score,
   };
 }
 
@@ -111,6 +152,41 @@ describe('replayRun', () => {
     const { sub } = playRun(41);
     expect(replayRun({ ...sub, steps: 0 }).ok).toBe(false);
     expect(replayRun({ ...sub, steps: MAX_STEPS + 1 }).ok).toBe(false);
+  });
+
+  it('replays a run that was continued with keys', () => {
+    const { sub, score } = playWithRevives(31337, 2);
+    expect(sub.revives.length).toBe(2);
+
+    const result = replayRun(sub);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.score).toBe(score);
+  });
+
+  it('scores a revived run higher than the same run cut short at the first death', () => {
+    const revived = playWithRevives(31337, 2);
+    const once = playWithRevives(31337, 0);
+    expect(revived.score).toBeGreaterThan(once.score);
+  });
+
+  it('refuses a revive used while the bird is still alive', () => {
+    // the obvious abuse: a free reset to mid-screen with a clean field
+    const { sub } = playWithRevives(31337, 1);
+    const midFlight = Math.floor(sub.steps / 4);
+    expect(replayRun({ ...sub, revives: [midFlight] })).toEqual({
+      ok: false,
+      reason: 'revived while alive',
+    });
+  });
+
+  it('caps how many continues one run can claim', () => {
+    const { sub } = playWithRevives(31337, 2);
+    const tooMany = Array.from({ length: MAX_REVIVES + 1 }, (_, i) => i);
+    expect(replayRun({ ...sub, revives: tooMany })).toEqual({
+      ok: false,
+      reason: 'too many revives',
+    });
   });
 
   it('rejects a bad seed', () => {

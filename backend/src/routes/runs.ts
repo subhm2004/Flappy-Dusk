@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { replayRun, MAX_STEPS } from '@flappy/core';
+import { replayRun, MAX_REVIVES, MAX_STEPS } from '@flappy/core';
 import { db, schema } from '../db';
 import { requireUser } from './guard';
 
@@ -13,6 +13,9 @@ const submission = z.object({
   baseSpeed: z.number().finite(),
   steps: z.number().int().min(1).max(MAX_STEPS),
   flaps: z.array(z.number().int().min(0)).max(MAX_STEPS),
+  // Continues bought with keys. The replay checks the bird was actually dead at
+  // each one, so this can't be used as a mid-flight reset.
+  revives: z.array(z.number().int().min(0)).max(MAX_REVIVES).default([]),
 });
 
 export async function runRoutes(app: FastifyInstance) {

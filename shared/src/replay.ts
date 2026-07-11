@@ -13,7 +13,7 @@
  * It is not bot-proof — a program that genuinely plays well still scores well —
  * but a score can no longer be invented out of thin air.
  */
-import { C, createState, flap, step } from './gameLogic.js';
+import { C, createState, flap, revive, step } from './gameLogic.js';
 import { levelBaseSpeed } from './progression.js';
 
 /** What the client sends after a run ends. */
@@ -26,6 +26,14 @@ export interface RunSubmission {
   steps: number;
   /** Step indices where the player flapped, ascending and unique. */
   flaps: number[];
+  /**
+   * Step indices where the player spent keys to continue, ascending and unique.
+   *
+   * A revive rebuilds the pipe field — but it does so from the run's own seeded
+   * RNG, so replaying it lands on exactly the same pipes. Knowing *when* it
+   * happened is all the server needs.
+   */
+  revives: number[];
 }
 
 export interface ReplayOk {
@@ -47,6 +55,16 @@ export type ReplayResult = ReplayOk | ReplayFailed;
 /** 30 minutes at 120Hz. Long enough for any real run; short enough to replay cheaply. */
 export const MAX_STEPS = 120 * 60 * 30;
 
+/**
+ * Revives per run.
+ *
+ * Keys live in the player's browser, so the server cannot check that a revive
+ * was actually paid for — it can only bound the damage. Five is where the
+ * in-game price (1, 4, 8, 18, 32 keys) starts doubling into the absurd, so no
+ * honest run goes past it anyway.
+ */
+export const MAX_REVIVES = 5;
+
 /** Highest level that still changes the speed — beyond this `levelBaseSpeed` is capped. */
 const MAX_SPEED_LEVEL = 11;
 
@@ -67,22 +85,29 @@ function isAllowedBaseSpeed(speed: number): boolean {
   return allowedBaseSpeeds().some((s) => Math.abs(s - speed) < 1e-9);
 }
 
+/** Ascending, unique, and inside the run. */
+function checkTimeline(marks: number[], steps: number, what: string): string | null {
+  let prev = -1;
+  for (const m of marks) {
+    if (!Number.isInteger(m) || m < 0 || m >= steps) return `${what} out of range`;
+    if (m <= prev) return `${what} must be ascending and unique`;
+    prev = m;
+  }
+  return null;
+}
+
 /** Rejects anything that isn't a well-formed, physically possible submission. */
 function check(sub: RunSubmission): string | null {
-  const { seed, baseSpeed, steps, flaps } = sub;
+  const { seed, baseSpeed, steps, flaps, revives } = sub;
 
   if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) return 'bad seed';
   if (!Number.isFinite(baseSpeed) || !isAllowedBaseSpeed(baseSpeed)) return 'bad base speed';
   if (!Number.isInteger(steps) || steps < 1 || steps > MAX_STEPS) return 'bad step count';
-  if (!Array.isArray(flaps) || flaps.length > steps) return 'bad flaps';
 
-  let prev = -1;
-  for (const f of flaps) {
-    if (!Number.isInteger(f) || f < 0 || f >= steps) return 'flap out of range';
-    if (f <= prev) return 'flaps must be ascending and unique';
-    prev = f;
-  }
-  return null;
+  if (!Array.isArray(flaps) || flaps.length > steps) return 'bad flaps';
+  if (!Array.isArray(revives) || revives.length > MAX_REVIVES) return 'too many revives';
+
+  return checkTimeline(flaps, steps, 'flap') ?? checkTimeline(revives, steps, 'revive');
 }
 
 /**
@@ -96,22 +121,35 @@ export function replayRun(sub: RunSubmission): ReplayResult {
   if (bad) return { ok: false, reason: bad };
 
   const state = createState(sub.seed, sub.baseSpeed);
-  let next = 0;
+  let nextFlap = 0;
+  let nextRevive = 0;
 
   for (let i = 0; i < sub.steps; i++) {
+    // A revive is only ever offered on the game-over screen. Requiring the bird
+    // to actually be dead stops it being used mid-flight as a free reset back to
+    // the middle of the screen with a clean field.
+    while (nextRevive < sub.revives.length && sub.revives[nextRevive] === i) {
+      if (state.status !== 'dead') return { ok: false, reason: 'revived while alive' };
+      revive(state);
+      nextRevive++;
+    }
+
     // The game applies a flap immediately, before the next fixed step runs, so
     // a flap recorded at step i is applied here, ahead of step i.
-    while (next < sub.flaps.length && sub.flaps[next] === i) {
+    while (nextFlap < sub.flaps.length && sub.flaps[nextFlap] === i) {
       flap(state);
-      next++;
+      nextFlap++;
     }
 
     const ev = step(state, C.DT);
 
     if (ev.died) {
-      // Death has to land on the last step: the client stops counting the
-      // moment it dies, so anything after that is padding.
-      if (i !== sub.steps - 1) return { ok: false, reason: 'died before the last step' };
+      // Death has to land on the last step — unless the player bought their way
+      // out of it, in which case a revive comes later and the run goes on.
+      const revivedAfter = sub.revives.some((r) => r > i);
+      if (i !== sub.steps - 1 && !revivedAfter) {
+        return { ok: false, reason: 'died before the last step' };
+      }
     }
   }
 

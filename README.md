@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="Flappy Dusk — a cozy 3D flappy adventure" width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="docs/banner.svg">
+    <img src="docs/banner-night.svg" alt="Flappy Dusk — a cozy 3D flappy adventure" width="100%">
+  </picture>
 </p>
 
 <h1 align="center">Flappy Dusk</h1>
@@ -146,7 +149,7 @@ A live HUD shows active effects and their countdown.
 ### 🏆 Global leaderboard
 
 - Sign in with Google — your name comes straight from your account
-- Every run you finish without a revive is ranked
+- Every run is ranked, continues included — the server replays the revives too
 - **Scores are verified, not trusted.** The game sends the *inputs* of a run —
   seed, base speed, and the step index of every flap — and the server replays
   them through the same physics to work out the score itself. `{"score": 999999}`
@@ -158,6 +161,13 @@ A live HUD shows active effects and their countdown.
 
 The pipes change colour as you climb — **Grove** green, then **Amber** at 50,
 **Orchid** at 100, **Ember** at 150 — so a long run looks like one.
+
+### 🌙 Dusk or night
+
+A second sky, and **Auto** follows your clock — night from 7pm to 6am, rolling
+over mid-run if you're still flying at seven. The bird, the pipes and the
+pickups light themselves after dark, so the sky goes deep indigo without taking
+the gameplay with it.
 
 ### ✨ Polish
 - Medals on game over — Bronze / Silver / Gold / Platinum

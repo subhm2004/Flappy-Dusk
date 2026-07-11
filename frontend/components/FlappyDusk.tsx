@@ -113,13 +113,8 @@ interface RunEndInfo {
   dCoins: number;
   dKeys: number;
   dPowerups: number;
-  /**
-   * Everything the server needs to replay this run and score it itself.
-   *
-   * Null when the run was revived: a revive rebuilds the pipe field mid-run, so
-   * the inputs no longer reproduce it and the leaderboard can't verify it.
-   */
-  replay: RunSubmission | null;
+  /** Everything the server needs to replay this run and score it itself. */
+  replay: RunSubmission;
 }
 
 /** Top three get a medal instead of a number. */
@@ -331,20 +326,14 @@ export default function FlappyDusk() {
     // Send the run's inputs up for ranking. We post what happened, not what we
     // scored — the server replays it and decides.
     if (apiEnabled && getToken() && info.score > 0) {
-      if (!info.replay) {
-        // A revive rebuilds the pipe field mid-run, so the recorded inputs stop
-        // reproducing it and there'd be nothing for the server to verify.
-        pushToast('Revived runs are not ranked');
-      } else {
-        api
-          .submitRun(info.replay)
-          .then(() => refreshBoard())
-          .catch(() => {
-            // Silently dropping this is how a beaten record quietly fails to
-            // show up on the leaderboard. Say so instead.
-            pushToast("Couldn't post that run to the leaderboard");
-          });
-      }
+      api
+        .submitRun(info.replay)
+        .then(() => refreshBoard())
+        .catch(() => {
+          // Silently dropping this is how a beaten record quietly fails to show
+          // up on the leaderboard. Say so instead.
+          pushToast("Couldn't post that run to the leaderboard");
+        });
     }
 
     setPhase('dead');
@@ -1267,14 +1256,14 @@ export default function FlappyDusk() {
     let runBaseSpeed: number = C.SPEED0;
     let runSteps = 0;
     let runFlaps: number[] = [];
-    let runRevived = false;
+    let runRevives: number[] = [];
 
     function newRun(): State {
       runSeed = Math.floor(Math.random() * 0x100000000) >>> 0;
       runBaseSpeed = levelBaseSpeed(levelRef.current, C.SPEED0);
       runSteps = 0;
       runFlaps = [];
-      runRevived = false;
+      runRevives = [];
       setPipeTier(PIPE_TIERS[0]);
       return createState(runSeed, runBaseSpeed);
     }
@@ -1331,9 +1320,13 @@ export default function FlappyDusk() {
       reported.powerups = runPowerups;
 
       // The death step is part of the run, and `runSteps` has already counted it.
-      const replay: RunSubmission | null = runRevived
-        ? null
-        : { seed: runSeed, baseSpeed: runBaseSpeed, steps: runSteps, flaps: runFlaps.slice() };
+      const replay: RunSubmission = {
+        seed: runSeed,
+        baseSpeed: runBaseSpeed,
+        steps: runSteps,
+        flaps: runFlaps.slice(),
+        revives: runRevives.slice(),
+      };
 
       setTimeout(() => {
         onRunEndRef.current({ score, runCoins, runKeys, dCoins, dKeys, dPowerups, replay });
@@ -1370,9 +1363,10 @@ export default function FlappyDusk() {
       // React decides which menu to show after a restart (home vs ready)
     }
     function doRevive() {
-      // A revive rebuilds the pipe field mid-run, so the recorded inputs no
-      // longer reproduce it. The run stays playable; it just can't be ranked.
-      runRevived = true;
+      // A revive rebuilds the pipe field — but from the run's own seeded RNG, so
+      // the server lands on exactly the same pipes when it replays. All it needs
+      // is when it happened.
+      runRevives.push(runSteps);
       revive(state);
       syncPipes(state);
       bird.rotation.z = 0;
@@ -1932,7 +1926,7 @@ export default function FlappyDusk() {
 
             {me ? (
               <p className={styles.boardNote}>
-                Signed in as <b>{me.name}</b>. Every run you finish without a revive is ranked.
+                Signed in as <b>{me.name}</b>. Every run you finish is ranked — continues included.
               </p>
             ) : (
               <p className={styles.boardNote}>Sign in to have your runs ranked.</p>
