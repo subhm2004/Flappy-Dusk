@@ -245,3 +245,38 @@ describe('collectsPower', () => {
     expect(collectsPower(5, { ...base, power: false })).toBe(false);
   });
 });
+
+describe('power-ups', () => {
+  it('a shield absorbs one otherwise-fatal hit', () => {
+    const s = createState(1);
+    s.status = 'playing';
+    s.shield = true;
+    // a pipe whose gap sits well below the bird, so the bird hits its top
+    s.birdY = 8;
+    s.pipes = [mkPipe({ x: C.BIRD_X, gapY: 3 })];
+    const ev = step(s, C.DT);
+    expect(ev.shieldUsed).toBe(true);
+    expect(ev.died).toBe(false);
+    expect(s.status).toBe('playing');
+    expect(s.shield).toBe(false);
+    expect(s.invT).toBeGreaterThan(0);
+  });
+
+  it('slow-mo moves pipes slower than normal', () => {
+    const normal = createState(1);
+    normal.status = 'playing';
+    const slow = createState(1);
+    slow.status = 'playing';
+    slow.slowT = C.SLOW_TIME;
+    const x0 = normal.pipes[0].x;
+    step(normal, C.DT);
+    step(slow, C.DT);
+    const movedNormal = x0 - normal.pipes[0].x;
+    const movedSlow = x0 - slow.pipes[0].x;
+    expect(movedSlow).toBeLessThan(movedNormal);
+  });
+
+  it('fast-mo moves pipes faster than normal', () => {
+    const normal = createState(1);
+    normal.status = 'playing';
+    const fast = createState(1);
