@@ -315,3 +315,38 @@ describe('baseSpeed / level', () => {
     s.pipes = [mkPipe({ x: C.BIRD_X - C.PIPE_R - C.BIRD_R - 0.1, gapY: C.READY_Y })];
     s.birdY = C.READY_Y;
     step(s, C.DT);
+    expect(s.score).toBe(1);
+    expect(s.speed).toBeGreaterThanOrEqual(7);
+  });
+});
+
+describe('revive', () => {
+  it('returns to playing, recentres the bird, and keeps score/coins/keys', () => {
+    const s = createState(3);
+    s.status = 'dead';
+    s.score = 12;
+    s.coins = 7;
+    s.keys = 2;
+    s.speed = C.SPEED_MAX;
+    revive(s);
+    expect(s.status).toBe('playing');
+    expect(s.birdY).toBe(C.READY_Y);
+    expect(s.birdVY).toBe(0);
+    expect(s.score).toBe(12);
+    expect(s.coins).toBe(7);
+    expect(s.keys).toBe(2);
+    expect(s.speed).toBe(C.SPEED_MAX);
+    expect(s.baseSpeed).toBe(C.SPEED0);
+    expect(s.invT).toBeGreaterThan(0); // brief grace after revive
+    expect(s.pipes.length).toBeGreaterThan(0);
+    // the fresh field gives breathing room before the first pipe
+    expect(Math.min(...s.pipes.map((p) => p.x))).toBeGreaterThanOrEqual(C.FIRST_PIPE_X);
+  });
+});
+
+describe('step', () => {
+  it('applies gravity while playing', () => {
+    const s = createState(1);
+    s.status = 'playing';
+    const before = s.birdVY;
+    step(s, C.DT);
