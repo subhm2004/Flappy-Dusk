@@ -330,3 +330,28 @@ export function step(s: State, dt: number): StepEvent {
     if (collectsPower(s.birdY, p)) {
       p.powerTaken = true;
       applyPower(s, p.powerType);
+      ev.powered += 1;
+      ev.power = p.powerType;
+    }
+
+    if (collide(s.birdY, p)) {
+      if (s.invT > 0) {
+        // shielded / grace: ignore
+      } else if (s.shield) {
+        s.shield = false;
+        s.invT = C.INV_TIME;
+        ev.shieldUsed = true;
+      } else {
+        s.status = 'dead';
+        ev.died = true;
+      }
+    }
+  }
+
+  if (s.birdY - C.BIRD_R <= C.GROUND_Y) {
+    s.birdY = C.GROUND_Y + C.BIRD_R;
+    s.status = 'dead';
+    ev.died = true;
+  }
+  return ev;
+}
