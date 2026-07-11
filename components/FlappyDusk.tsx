@@ -45,3 +45,50 @@ const K = {
   sound: 'sunsetFlapSound',
   haptics: 'sunsetFlapHaptics',
   effects: 'sunsetFlapEffects',
+};
+
+type Phase = 'home' | 'ready' | 'playing' | 'dead';
+
+interface Medal {
+  min: number;
+  name: string;
+  a: string;
+  b: string;
+}
+const MEDALS: Medal[] = [
+  { min: 50, name: 'PLATINUM', a: '#BFF6F0', b: '#59C7BD' },
+  { min: 30, name: 'GOLD', a: '#FFE07A', b: '#E0A22B' },
+  { min: 15, name: 'SILVER', a: '#EDEDED', b: '#A9B0B8' },
+  { min: 5, name: 'BRONZE', a: '#F0C08A', b: '#B26B33' },
+];
+function medalFor(score: number): Medal | null {
+  for (const m of MEDALS) if (score >= m.min) return m;
+  return null;
+}
+
+const REVIVE_COSTS = [1, 4, 8, 18, 32];
+function reviveCostFor(n: number): number {
+  if (n < REVIVE_COSTS.length) return REVIVE_COSTS[n];
+  return REVIVE_COSTS[REVIVE_COSTS.length - 1] * 2 ** (n - REVIVE_COSTS.length + 1);
+}
+
+interface EngineApi {
+  applySkin: (skin: Skin) => void;
+  revive: () => void;
+  restart: () => void;
+  refreshBaseSpeed: () => void;
+}
+
+interface RunEndInfo {
+  score: number;
+  runCoins: number;
+  runKeys: number;
+  dCoins: number;
+  dKeys: number;
+  dPowerups: number;
+}
+
+function lsSet(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
