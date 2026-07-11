@@ -100,3 +100,37 @@ A live HUD shows active effects and their countdown.
 - **Daily missions** — three date-seeded goals (collect coins, score N in a run,
   grab power-ups, play N games …), each rewarding coins + XP
 - **Achievements** — 11 milestone unlocks (First Flight, High Flyer, Coin Hoarder,
+  Locksmith, Rising Star, Fashionista …)
+- **Levels** — missions and achievements grant XP; filling the bar levels you up,
+  and **each level nudges the base speed up**, so the game grows with you
+
+### ✨ Polish
+- Medals on game over — Bronze / Silver / Gold / Platinum
+- Screen-shake, death flash, and coloured tints while slow/fast-mo is active
+- Mobile **haptics** on flap, coin, key, power-up, and death
+- Procedural audio via Web Audio oscillators — **zero audio assets**
+- Pause (auto-pauses when the tab loses focus) and a settings menu
+- Everything honours `prefers-reduced-motion`
+- All progress persists in `localStorage`
+
+---
+
+## Controls
+
+| Action | Input |
+|---|---|
+| Flap | **Tap** / **Click** / `Space` / `↑` / `W` |
+| Pause | `P` / `Esc` / the ⏸ button |
+| Mute | `M` / the 🔊 button |
+
+---
+
+## How to play
+
+1. The **home screen** shows your best score, level, coins, and keys. Hit **▶ Play**.
+2. Flap to thread the gaps. Every pipe you pass is **+1**.
+3. Grab **coins** for the shop, **power-ups** for an edge, and **keys** to buy
+   yourself a second chance.
+4. When you die you can **Continue** with keys — or take the medal and go again.
+5. Finish **daily missions** and **achievements** to earn XP and level up.
+   Careful: higher levels start faster.
