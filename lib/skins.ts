@@ -70,3 +70,21 @@ export const SKINS: Skin[] = [
     id: 'ember',
     name: 'Ember',
     cost: 250,
+    body: 0x3a2e3a,
+    wing: 0xff5a3c,
+    belly: 0xffb199,
+    beak: 0xffc94d,
+    tail: 0xff5a3c,
+  },
+];
+
+export const DEFAULT_SKIN = SKINS[0].id;
+
+export function skinById(id: string): Skin {
+  return SKINS.find((s) => s.id === id) ?? SKINS[0];
+}
+
+/** CSS hex string for a numeric color, handy for DOM swatches. */
+export function hex(color: number): string {
+  return '#' + color.toString(16).padStart(6, '0');
+}
