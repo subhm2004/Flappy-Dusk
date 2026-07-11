@@ -44,3 +44,25 @@ export interface RunStats {
   coins: number;
   keys: number;
   powerups: number;
+}
+
+/** Lifetime stats used by achievements. */
+export interface LifetimeStats {
+  runs: number;
+  earnedCoins: number;
+  totalKeys: number;
+  totalPowerups: number;
+  bestScore: number;
+}
+
+export const EMPTY_STATS: LifetimeStats = {
+  runs: 0,
+  earnedCoins: 0,
+  totalKeys: 0,
+  totalPowerups: 0,
+  bestScore: 0,
+};
+
+export function foldRun(stats: LifetimeStats, run: RunStats): LifetimeStats {
+  return {
+    runs: stats.runs + 1,
