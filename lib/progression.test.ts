@@ -98,3 +98,22 @@ describe('stats + achievements', () => {
     expect(unlocks.map((a) => a.id)).toContain('first');
   });
 
+  it('does not re-unlock an already-unlocked achievement', () => {
+    const stats = foldRun(EMPTY_STATS, { score: 3, coins: 0, keys: 0, powerups: 0 });
+    const unlocks = newlyUnlocked(['first'], stats, 1, 1);
+    expect(unlocks.map((a) => a.id)).not.toContain('first');
+  });
+
+  it('unlocks level and collector achievements from level / ownership', () => {
+    const level5 = newlyUnlocked([], EMPTY_STATS, 5, 1).map((a) => a.id);
+    expect(level5).toContain('level5');
+    const collector = newlyUnlocked([], EMPTY_STATS, 1, 6).map((a) => a.id);
+    expect(collector).toContain('collector');
+  });
+
+  it('every achievement has a positive reward', () => {
+    for (const a of ACHIEVEMENTS) {
+      expect(a.rewardCoins + a.rewardXp).toBeGreaterThan(0);
+    }
+  });
+});
