@@ -253,3 +253,29 @@ export function collectsPower(birdY: number, pipe: Pipe): boolean {
 export function step(s: State, dt: number): StepEvent {
   const ev: StepEvent = {
     scored: 0,
+    coined: 0,
+    keyed: 0,
+    powered: 0,
+    power: null,
+    shieldUsed: false,
+    died: false,
+  };
+  s.time += dt;
+
+  if (s.status === 'ready') {
+    s.birdY = C.READY_Y + Math.sin(s.time * 3) * 0.18;
+    return ev;
+  }
+
+  s.birdVY = Math.max(C.MAX_FALL, s.birdVY + C.GRAVITY * dt);
+  s.birdY += s.birdVY * dt;
+  if (s.birdY + C.BIRD_R > C.CEIL_Y) {
+    s.birdY = C.CEIL_Y - C.BIRD_R;
+    s.birdVY = Math.min(s.birdVY, 0);
+  }
+
+  if (s.status === 'dead') {
+    if (s.birdY - C.BIRD_R < C.GROUND_Y) {
+      s.birdY = C.GROUND_Y + C.BIRD_R;
+      s.birdVY = 0;
+    }
