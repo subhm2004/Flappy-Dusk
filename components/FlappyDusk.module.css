@@ -879,3 +879,50 @@
 @keyframes toastIn {
   from {
     opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- home / main menu ---------- */
+.home {
+  pointer-events: auto;
+  padding: 24px;
+}
+
+.homeInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(420px, 92vw);
+}
+
+.homeTitle {
+  font-size: clamp(44px, 11vw, 88px);
+  font-weight: 800;
+  color: var(--coral);
+  letter-spacing: 0.01em;
+  text-shadow: 0 3px 0 var(--coral-deep), 0 12px 30px rgba(90, 30, 50, 0.35);
+}
+
+.homeTag {
+  margin-top: 6px;
+  font-size: clamp(13px, 2.6vw, 16px);
+  font-weight: 700;
+  color: var(--cream);
+  opacity: 0.85;
+  text-shadow: 0 2px 8px rgba(90, 30, 50, 0.4);
+}
+
+.statCards {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.statCard {
