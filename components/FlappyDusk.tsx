@@ -1305,3 +1305,49 @@ export default function FlappyDusk() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ready prompt (taps pass through to flap) */}
+      {phase === 'ready' && panel === 'none' && (
+        <div className={`${styles.layer} ${styles.titleCard}`}>
+          <h1>Flappy Dusk</h1>
+          <div className={styles.sub}>tap, click, or press space to flap</div>
+        </div>
+      )}
+
+      {/* game over */}
+      {phase === 'dead' && (
+        <div
+          className={styles.layer}
+          style={{ pointerEvents: 'auto', zIndex: 8 }}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <div className={styles.panel}>
+            {medal && (
+              <>
+                <div
+                  className={styles.medal}
+                  style={{ background: `radial-gradient(circle at 35% 30%, ${medal.a}, ${medal.b})` }}
+                >
+                  ★
+                </div>
+                <div className={styles.medalLabel}>{medal.name}</div>
+              </>
+            )}
+            <div className={styles.head}>SCORE</div>
+            <div className={styles.num}>{runStats.score}</div>
+            <div className={styles.best}>best {bestShown}</div>
+            <div className={styles.coins}>
+              <span className={styles.coinIcon} />
+              {runStats.coins}
+              {runStats.keys > 0 && <span className={styles.keyRun}>🔑 {runStats.keys}</span>}
+            </div>
+          </div>
+          <div className={styles.deadBtns}>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnKey}`}
+              disabled={keys < reviveCost}
+              onClick={useKeyContinue}
+            >
