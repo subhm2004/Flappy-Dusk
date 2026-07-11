@@ -84,3 +84,32 @@ You don't need Android Studio or the Android SDK locally — CI has both.
    artifact from the Artifacts section.
 3. Unzip it → `flappy-dusk.apk`.
 
+**As a release** (permanent download link, better for sharing):
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The same workflow attaches `flappy-dusk.apk` to a GitHub Release at
+https://github.com/subhm2004/Flappy-Dusk/releases.
+
+> Artifacts expire after 90 days; release assets don't. Tag it if you want the
+> link to keep working.
+
+### Install it on your phone
+
+1. Copy `flappy-dusk.apk` to the device (USB, Drive, or just open the release
+   link in the phone's browser).
+2. Tap it. Android will block the install the first time — allow
+   **Install unknown apps** for whichever app you opened it from
+   (Settings → Apps → Special access → Install unknown apps).
+3. Tap **Install anyway** on the Play Protect warning.
+
+Both warnings are expected: this is a **debug-signed** APK, not one signed with
+a release key and published through the Play Store. It is fine for playing it
+yourself and handing it to friends. See *Release signing* below if you want to
+go further.
+
+### Build the APK locally (optional)
+
