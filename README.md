@@ -729,4 +729,3 @@ Not built yet:
 
 [MIT](LICENSE) © 2026 Shubham Malik
 
-Do whatever you like with it.
