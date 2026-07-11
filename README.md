@@ -134,3 +134,37 @@ A live HUD shows active effects and their countdown.
 4. When you die you can **Continue** with keys — or take the medal and go again.
 5. Finish **daily missions** and **achievements** to earn XP and level up.
    Careful: higher levels start faster.
+
+---
+
+## Getting started
+
+**Requirements:** Node.js 18+
+
+```bash
+cd flappy-dusk
+npm install
+npm run dev
+```
+
+Open **http://localhost:3000**.
+
+---
+
+## Scripts
+
+| Script | What it does |
+|---|---|
+| `npm run dev` | Start the dev server (hot reload) |
+| `npm run build` | Production build — also type-checks the whole project |
+| `npm run start` | Serve the production build |
+| `npm test` | Run the game-logic + progression unit tests |
+| `npm run test:watch` | Run tests in watch mode |
+
+---
+
+## Project structure
+
+```
+app/
+  layout.tsx              Root layout, metadata, viewport
