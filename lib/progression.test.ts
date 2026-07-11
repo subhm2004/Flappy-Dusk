@@ -78,3 +78,23 @@ describe('daily missions', () => {
     expect(again).toEqual(done);
   });
 });
+
+describe('stats + achievements', () => {
+  it('folds a run into lifetime stats', () => {
+    const s1 = foldRun(EMPTY_STATS, { score: 12, coins: 5, keys: 1, powerups: 2 });
+    expect(s1.runs).toBe(1);
+    expect(s1.earnedCoins).toBe(5);
+    expect(s1.totalKeys).toBe(1);
+    expect(s1.totalPowerups).toBe(2);
+    expect(s1.bestScore).toBe(12);
+    const s2 = foldRun(s1, { score: 8, coins: 3, keys: 0, powerups: 1 });
+    expect(s2.bestScore).toBe(12); // keeps the higher
+    expect(s2.earnedCoins).toBe(8);
+  });
+
+  it('unlocks the first-flight achievement after one run', () => {
+    const stats = foldRun(EMPTY_STATS, { score: 3, coins: 0, keys: 0, powerups: 0 });
+    const unlocks = newlyUnlocked([], stats, 1, 1);
+    expect(unlocks.map((a) => a.id)).toContain('first');
+  });
+
