@@ -555,3 +555,49 @@
   padding: 6px 12px;
   border-radius: 999px;
   background: rgba(42, 31, 61, 0.4);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ---------- shared buttons ---------- */
+.btn {
+  border: none;
+  border-radius: 14px;
+  padding: 13px 22px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--plum);
+  background: rgba(255, 250, 243, 0.94);
+  box-shadow: 0 8px 20px rgba(60, 20, 40, 0.3);
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  box-shadow: none;
+}
+
+.btnKey {
+  color: #fff;
+  background: linear-gradient(180deg, #ffcf5a, #e0a22b);
+}
+
+.btnKey:disabled {
+  background: rgba(255, 250, 243, 0.4);
+  color: var(--plum);
+}
+
+.btnDanger {
+  color: #fff;
+  background: #d24b38;
+}
+
