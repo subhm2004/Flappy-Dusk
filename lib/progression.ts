@@ -180,3 +180,25 @@ export interface Achievement {
 export const ACHIEVEMENTS: Achievement[] = [
   { id: 'first', label: 'First Flight', desc: 'Play your first game', rewardCoins: 10, rewardXp: 20, test: (s) => s.runs >= 1 },
   { id: 'score10', label: 'Getting Air', desc: 'Score 10 in a run', rewardCoins: 20, rewardXp: 40, test: (s) => s.bestScore >= 10 },
+  { id: 'score25', label: 'High Flyer', desc: 'Score 25 in a run', rewardCoins: 50, rewardXp: 90, test: (s) => s.bestScore >= 25 },
+  { id: 'score40', label: 'Sky Master', desc: 'Score 40 in a run', rewardCoins: 120, rewardXp: 160, test: (s) => s.bestScore >= 40 },
+  { id: 'coins250', label: 'Coin Hoarder', desc: 'Collect 250 coins total', rewardCoins: 40, rewardXp: 70, test: (s) => s.earnedCoins >= 250 },
+  { id: 'coins1000', label: 'Rich Bird', desc: 'Collect 1000 coins total', rewardCoins: 150, rewardXp: 200, test: (s) => s.earnedCoins >= 1000 },
+  { id: 'keys5', label: 'Locksmith', desc: 'Collect 5 keys total', rewardCoins: 60, rewardXp: 100, test: (s) => s.totalKeys >= 5 },
+  { id: 'power25', label: 'Power Player', desc: 'Grab 25 power-ups total', rewardCoins: 60, rewardXp: 100, test: (s) => s.totalPowerups >= 25 },
+  { id: 'level5', label: 'Rising Star', desc: 'Reach level 5', rewardCoins: 80, rewardXp: 0, test: (_s, level) => level >= 5 },
+  { id: 'level10', label: 'Legend', desc: 'Reach level 10', rewardCoins: 200, rewardXp: 0, test: (_s, level) => level >= 10 },
+  { id: 'collector', label: 'Fashionista', desc: 'Own every skin', rewardCoins: 100, rewardXp: 120, test: (_s, _l, owned) => owned >= 6 },
+];
+
+/** Returns achievement ids newly satisfied that aren't already unlocked. */
+export function newlyUnlocked(
+  unlocked: string[],
+  stats: LifetimeStats,
+  level: number,
+  ownedSkins: number,
+): Achievement[] {
+  return ACHIEVEMENTS.filter(
+    (a) => !unlocked.includes(a.id) && a.test(stats, level, ownedSkins),
+  );
+}
