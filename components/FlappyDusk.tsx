@@ -1445,3 +1445,49 @@ export default function FlappyDusk() {
               <span className={styles.chip}>LV {level}</span>
             </div>
             <div className={styles.missionList}>
+              {missions.map((m) => (
+                <div key={m.id} className={`${styles.mission} ${m.done ? styles.missionDone : ''}`}>
+                  <div className={styles.missionTop}>
+                    <span>{m.done ? '✅ ' : ''}{m.label}</span>
+                    <span className={styles.missionReward}>
+                      <span className={styles.coinIcon} /> {m.rewardCoins} · {m.rewardXp} XP
+                    </span>
+                  </div>
+                  <div className={styles.missionBar}>
+                    <div
+                      className={styles.missionFill}
+                      style={{ width: `${Math.min(100, (m.progress / m.target) * 100)}%` }}
+                    />
+                  </div>
+                  <div className={styles.missionProg}>
+                    {Math.min(m.progress, m.target)}/{m.target}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className={styles.shopHead} style={{ marginTop: 4 }}>
+              <span>Achievements</span>
+              <span className={styles.chip}>
+                {unlocked.length}/{ACHIEVEMENTS.length}
+              </span>
+            </div>
+            <div className={styles.achList}>
+              {ACHIEVEMENTS.map((a) => {
+                const got = unlocked.includes(a.id);
+                return (
+                  <div key={a.id} className={`${styles.ach} ${got ? styles.achGot : ''}`}>
+                    <span className={styles.achIcon}>{got ? '🏆' : '🔒'}</span>
+                    <span className={styles.achText}>
+                      <b>{a.label}</b>
+                      <small>{a.desc}</small>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button type="button" className={styles.btn} onClick={() => setPanel('none')}>
+              Close
+            </button>
+          </div>
