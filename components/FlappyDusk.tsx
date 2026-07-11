@@ -418,3 +418,50 @@ export default function FlappyDusk() {
     }
 
     const CAM_X = -2.2;
+    const CAM_Y = 4.3;
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    } catch {
+      showFatal(
+        'WebGL is unavailable in this browser, so the 3D scene cannot start. ' +
+          'Try a current version of Chrome, Edge, Firefox, or Safari.',
+      );
+      return;
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    const anyRenderer = renderer as unknown as Record<string, unknown>;
+    if ('outputColorSpace' in renderer && anyTHREE.SRGBColorSpace) {
+      anyRenderer.outputColorSpace = anyTHREE.SRGBColorSpace;
+    } else if (anyTHREE.sRGBEncoding !== undefined) {
+      anyRenderer.outputEncoding = anyTHREE.sRGBEncoding;
+    }
+    function markSRGB(tex: THREE.Texture) {
+      const at = tex as unknown as Record<string, unknown>;
+      if (anyTHREE.SRGBColorSpace) at.colorSpace = anyTHREE.SRGBColorSpace;
+      else if (anyTHREE.sRGBEncoding !== undefined) at.encoding = anyTHREE.sRGBEncoding;
+    }
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xf2a087, 26, 72);
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(CAM_X, CAM_Y, 13.5);
+    camera.lookAt(new THREE.Vector3(1.6, 4.4, 0));
+
+    /* sky */
+    {
+      const c = document.createElement('canvas');
+      c.width = 2;
+      c.height = 512;
+      const g = c.getContext('2d')!;
+      const grad = g.createLinearGradient(0, 0, 0, 512);
+      grad.addColorStop(0.0, '#6D5BD0');
+      grad.addColorStop(0.45, '#E98AA0');
+      grad.addColorStop(0.78, '#FFB48C');
+      grad.addColorStop(1.0, '#FFD9A6');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 2, 512);
+      const tex = new THREE.CanvasTexture(c);
