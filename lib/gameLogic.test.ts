@@ -174,3 +174,38 @@ describe('collide', () => {
   const pipe: Pipe = mkPipe();
 
   it('is false when the bird is centred in the gap', () => {
+    expect(collide(5, pipe)).toBe(false);
+  });
+
+  it('is true when the bird hits the top of the gap', () => {
+    expect(collide(5 + C.GAP / 2, pipe)).toBe(true);
+  });
+
+  it('is true when the bird hits the bottom of the gap', () => {
+    expect(collide(5 - C.GAP / 2, pipe)).toBe(true);
+  });
+
+  it('is false when the pipe is horizontally far away', () => {
+    expect(collide(20, { ...pipe, x: C.BIRD_X + 10 })).toBe(false);
+  });
+});
+
+describe('collectsCoin', () => {
+  const base: Pipe = mkPipe({ coin: true });
+
+  it('collects when the bird overlaps the coin', () => {
+    expect(collectsCoin(5, base)).toBe(true);
+  });
+
+  it('does not collect an already-taken coin', () => {
+    expect(collectsCoin(5, { ...base, coinTaken: true })).toBe(false);
+  });
+
+  it('does not collect a pipe without a coin', () => {
+    expect(collectsCoin(5, { ...base, coin: false })).toBe(false);
+  });
+
+  it('does not collect when vertically out of reach', () => {
+    expect(collectsCoin(5 + C.COIN_R + C.BIRD_R + 0.5, base)).toBe(false);
+  });
+});
