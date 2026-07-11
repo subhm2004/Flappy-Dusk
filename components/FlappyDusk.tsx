@@ -605,3 +605,50 @@ export default function FlappyDusk() {
       tail.castShadow = true;
       bird.add(tail);
       bird.position.set(C.BIRD_X, C.READY_Y, 0);
+      scene.add(bird);
+    }
+    function applySkin(skin: Skin) {
+      bodyMat.color.set(skin.body);
+      bellyMat.color.set(skin.belly);
+      beakMat.color.set(skin.beak);
+      wingMatL.color.set(skin.wing);
+      wingMatR.color.set(skin.wing);
+      tailMat.color.set(skin.tail);
+    }
+
+    /* pipe pool */
+    const POOL = 8;
+    const pipePool: THREE.Group[] = [];
+    {
+      const bodyM = mat(0x62c88f);
+      const lipM = mat(0x3fa070);
+      for (let i = 0; i < POOL; i++) {
+        const grp = new THREE.Group();
+        const bottom = new THREE.Mesh(new THREE.CylinderGeometry(C.PIPE_R, C.PIPE_R, 1, 14), bodyM);
+        const top = new THREE.Mesh(new THREE.CylinderGeometry(C.PIPE_R, C.PIPE_R, 1, 14), bodyM);
+        const lipB = new THREE.Mesh(
+          new THREE.CylinderGeometry(C.PIPE_R * 1.24, C.PIPE_R * 1.24, 0.5, 14),
+          lipM,
+        );
+        const lipT = lipB.clone();
+        [bottom, top, lipB, lipT].forEach((m) => {
+          m.castShadow = true;
+          m.receiveShadow = true;
+          grp.add(m);
+        });
+        grp.userData = { bottom, top, lipB, lipT, gapY: null as number | null };
+        grp.visible = false;
+        pipePool.push(grp);
+        scene.add(grp);
+      }
+    }
+
+    /* coin pool */
+    const coinPool: THREE.Mesh[] = [];
+    {
+      const coinGeo = new THREE.CylinderGeometry(C.COIN_R, C.COIN_R, 0.09, 20);
+      coinGeo.rotateX(Math.PI / 2);
+      const coinMat = new THREE.MeshStandardMaterial({
+        color: 0xffd24d,
+        metalness: 0.35,
+        roughness: 0.35,
