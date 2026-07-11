@@ -1032,13 +1032,35 @@
 
 .boardRow {
   display: grid;
-  grid-template-columns: 32px 1fr auto;
+  grid-template-columns: 30px 30px 1fr auto;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
+  padding: 8px 12px;
   border-radius: 12px;
   background: rgba(90, 59, 70, 0.06);
   font-size: 15px;
+}
+
+/* The podium reads at a glance, without hunting for the number. */
+.boardRowTop {
+  background: rgba(255, 177, 61, 0.14);
+}
+
+.boardAvatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(90, 59, 70, 0.12);
+}
+
+.boardAvatarFallback {
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--cream);
+  background: var(--coral);
 }
 
 /* The signed-in player, so they can find themselves without reading every row. */
@@ -1051,6 +1073,10 @@
   font-weight: 700;
   opacity: 0.55;
   font-variant-numeric: tabular-nums;
+  text-align: center;
+  /* The medals are emoji and sit small next to the numbers otherwise. */
+  font-size: 17px;
+  line-height: 1;
 }
 
 .boardName {

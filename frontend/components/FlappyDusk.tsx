@@ -113,6 +113,36 @@ interface RunEndInfo {
   replay: RunSubmission | null;
 }
 
+/** Top three get a medal instead of a number. */
+const MEDAL_FOR_RANK: Record<number, string | undefined> = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+/**
+ * A player's Google picture, falling back to their initial. Google occasionally
+ * 403s an avatar when a referrer is sent, and a missing one shouldn't leave a
+ * hole in the row — hence both the `no-referrer` policy and the fallback.
+ */
+function Avatar({ url, name }: { url: string | null; name: string }) {
+  const [broken, setBroken] = useState(false);
+
+  if (!url || broken) {
+    return (
+      <span className={`${styles.boardAvatar} ${styles.boardAvatarFallback}`} aria-hidden="true">
+        {name.trim().charAt(0).toUpperCase() || '?'}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      className={styles.boardAvatar}
+      src={url}
+      alt=""
+      referrerPolicy="no-referrer"
+      onError={() => setBroken(true)}
+    />
+  );
+}
+
 /** The official four-colour Google "G". Google's branding rules don't allow a
  *  recoloured or redrawn mark, so these paths are theirs, verbatim. */
 function GoogleG() {
@@ -1758,9 +1788,12 @@ export default function FlappyDusk() {
                     key={`${row.rank}-${row.name}`}
                     className={`${styles.boardRow} ${
                       me && row.name === me.name ? styles.boardRowMe : ''
-                    }`}
+                    } ${MEDAL_FOR_RANK[row.rank] ? styles.boardRowTop : ''}`}
                   >
-                    <span className={styles.boardRank}>{row.rank}</span>
+                    <span className={styles.boardRank}>
+                      {MEDAL_FOR_RANK[row.rank] ?? row.rank}
+                    </span>
+                    <Avatar url={row.avatarUrl} name={row.name} />
                     <span className={styles.boardName}>{row.name}</span>
                     <span className={styles.boardScore}>{row.best}</span>
                   </li>
