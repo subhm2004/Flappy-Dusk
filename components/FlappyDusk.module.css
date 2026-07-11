@@ -787,3 +787,49 @@
 .ach {
   display: flex;
   align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(90, 59, 70, 0.06);
+  opacity: 0.55;
+}
+
+.achGot {
+  opacity: 1;
+  background: rgba(255, 201, 77, 0.16);
+}
+
+.achIcon {
+  font-size: 22px;
+}
+
+.achText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.achText small {
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+/* ---------- settings ---------- */
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  font-size: 15px;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(90, 59, 70, 0.12);
+}
+
+.toggle {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--plum);
+  background: rgba(90, 59, 70, 0.18);
