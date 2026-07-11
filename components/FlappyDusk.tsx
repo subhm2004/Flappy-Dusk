@@ -791,3 +791,50 @@ export default function FlappyDusk() {
             sp.visible = false;
           }
         } else {
+          grp.visible = false;
+          cm.visible = false;
+          km.visible = false;
+          sp.visible = false;
+        }
+      }
+    }
+
+    /* flap puffs */
+    interface Puff {
+      mesh: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>;
+      life: number;
+    }
+    const puffs: Puff[] = [];
+    for (let i = 0; i < 10; i++) {
+      const m = new THREE.Mesh(
+        new THREE.SphereGeometry(0.09, 6, 6),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 }),
+      );
+      m.visible = false;
+      puffs.push({ mesh: m, life: 0 });
+      scene.add(m);
+    }
+    let puffIdx = 0;
+    function spawnPuffs() {
+      if (!effectsOK()) return;
+      for (let k = 0; k < 3; k++) {
+        const p = puffs[puffIdx];
+        puffIdx = (puffIdx + 1) % puffs.length;
+        p.life = 0.45;
+        p.mesh.visible = true;
+        p.mesh.material.opacity = 0.85;
+        p.mesh.position.set(bird.position.x - 0.3, bird.position.y - 0.25, (k - 1) * 0.25);
+        p.mesh.userData = { vx: -1.4 - k * 0.3, vy: -0.8 + k * 0.5 };
+      }
+    }
+    function updatePuffs(d: number) {
+      for (let i = 0; i < puffs.length; i++) {
+        const p = puffs[i];
+        if (p.life <= 0) continue;
+        p.life -= d;
+        p.mesh.position.x += p.mesh.userData.vx * d;
+        p.mesh.position.y += p.mesh.userData.vy * d;
+        p.mesh.material.opacity = Math.max(0, p.life / 0.45) * 0.85;
+        if (p.life <= 0) p.mesh.visible = false;
+      }
+    }
