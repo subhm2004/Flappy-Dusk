@@ -601,3 +601,50 @@
   background: #d24b38;
 }
 
+.deadBtns {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(320px, 78vw);
+}
+
+.keyRun {
+  margin-left: 10px;
+}
+
+/* ---------- panels (shop / missions / settings) ---------- */
+.shopPanel {
+  pointer-events: auto;
+  width: min(460px, 92vw);
+  max-height: 84vh;
+  overflow-y: auto;
+  background: rgba(255, 250, 243, 0.97);
+  color: var(--plum);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 22px 60px rgba(60, 20, 40, 0.45);
+}
+
+.shopHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.shopHead .chip {
+  color: var(--plum);
+  background: rgba(90, 59, 70, 0.12);
+}
+
+.skinGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.skinCard {
