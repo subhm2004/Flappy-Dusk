@@ -185,3 +185,50 @@ export default function FlappyDusk() {
     const unlocks = newlyUnlocked(unlocked, newStats, level, owned.length);
     unlocks.forEach((a) => {
       bonusCoins += a.rewardCoins;
+      bonusXp += a.rewardXp;
+      pushToast(`🏆 ${a.label}`);
+    });
+    let allUnlocked = unlocks.length ? [...unlocked, ...unlocks.map((a) => a.id)] : unlocked;
+
+    const lv = addXp(level, xp, bonusXp);
+    if (lv.leveledUp > 0) pushToast(`⭐ Level ${lv.level}!`);
+
+    // achievements that trigger on the new level
+    const lvlUnlocks = newlyUnlocked(allUnlocked, newStats, lv.level, owned.length);
+    lvlUnlocks.forEach((a) => {
+      bonusCoins += a.rewardCoins;
+      pushToast(`🏆 ${a.label}`);
+    });
+    if (lvlUnlocks.length) allUnlocked = [...allUnlocked, ...lvlUnlocks.map((a) => a.id)];
+
+    const newCoins = coins + info.dCoins + bonusCoins;
+    const newKeys = keys + info.dKeys;
+
+    setCoins(newCoins);
+    persistNum(K.coins, newCoins);
+    setKeys(newKeys);
+    persistNum(K.keys, newKeys);
+    setBest(newStats.bestScore);
+    persistNum(K.best, newStats.bestScore);
+    setStats(newStats);
+    persistJSON(K.stats, newStats);
+    setMissions(after);
+    persistJSON(K.missions, after);
+    setUnlocked(allUnlocked);
+    persistJSON(K.ach, allUnlocked);
+    setLevel(lv.level);
+    persistNum(K.level, lv.level);
+    setXp(lv.xp);
+    persistNum(K.xp, lv.xp);
+
+    setRunStats({ score: info.score, coins: info.runCoins, keys: info.runKeys });
+    setPhase('dead');
+  };
+
+  /* ---------- load persisted values once ---------- */
+  useEffect(() => {
+    try {
+      const ls = window.localStorage;
+      const num = (k: string) => parseInt(ls.getItem(k) || '0', 10) || 0;
+      setBest(num(K.best));
+      setCoins(num(K.coins));
