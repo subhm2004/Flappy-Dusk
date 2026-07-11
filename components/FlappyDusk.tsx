@@ -931,3 +931,50 @@ export default function FlappyDusk() {
     }
 
     function triggerDeath() {
+      sfx.hit();
+      vibrate([0, 55, 40, 90]);
+      if (effectsOK()) {
+        shakeAmt = 0.55;
+        flashEl!.classList.remove(styles.flashOn);
+        void flashEl!.offsetWidth;
+        flashEl!.classList.add(styles.flashOn);
+      }
+      const score = state.score;
+      const runCoins = state.coins;
+      const runKeys = state.keys;
+      const dCoins = state.coins - reported.coins;
+      const dKeys = state.keys - reported.keys;
+      const dPowerups = runPowerups - reported.powerups;
+      reported.coins = state.coins;
+      reported.keys = state.keys;
+      reported.powerups = runPowerups;
+      setTimeout(() => {
+        onRunEndRef.current({ score, runCoins, runKeys, dCoins, dKeys, dPowerups });
+      }, 550);
+    }
+
+    /* pause / mute */
+    function setPaused(p: boolean) {
+      if (state.status !== 'playing') return;
+      paused = p;
+      pauseOverlayEl!.style.display = p ? 'flex' : 'none';
+      pauseBtnEl!.textContent = p ? '▶' : '⏸';
+      if (!p) {
+        lastT = performance.now();
+        if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume().catch(() => {});
+      }
+    }
+    function togglePause() {
+      setPaused(!paused);
+    }
+
+    /* engine API */
+    function doRestart() {
+      state = createState(undefined, levelBaseSpeed(levelRef.current, C.SPEED0));
+      resetRunReporting();
+      syncPipes(state);
+      scoreEl!.textContent = '0';
+      coinCountEl!.textContent = '0';
+      pauseOverlayEl!.style.display = 'none';
+      paused = false;
+      bird.rotation.z = 0;
