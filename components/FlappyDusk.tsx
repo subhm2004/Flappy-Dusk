@@ -232,3 +232,49 @@ export default function FlappyDusk() {
       const num = (k: string) => parseInt(ls.getItem(k) || '0', 10) || 0;
       setBest(num(K.best));
       setCoins(num(K.coins));
+      setKeys(num(K.keys));
+      setLevel(Math.max(1, num(K.level) || 1));
+      setXp(num(K.xp));
+      const rawOwned = ls.getItem(K.owned);
+      if (rawOwned) {
+        const arr = JSON.parse(rawOwned);
+        if (Array.isArray(arr)) setOwned(Array.from(new Set<string>([DEFAULT_SKIN, ...arr])));
+      }
+      const sel = ls.getItem(K.skin);
+      if (sel) setSelected(sel);
+      const rawStats = ls.getItem(K.stats);
+      if (rawStats) setStats({ ...EMPTY_STATS, ...JSON.parse(rawStats) });
+      const rawAch = ls.getItem(K.ach);
+      if (rawAch) {
+        const arr = JSON.parse(rawAch);
+        if (Array.isArray(arr)) setUnlocked(arr);
+      }
+      const today = todayKey();
+      const savedDate = ls.getItem(K.missionsDate);
+      const rawM = ls.getItem(K.missions);
+      if (savedDate === today && rawM) {
+        setMissions(JSON.parse(rawM));
+      } else {
+        const m = generateDailyMissions(dateSeed());
+        setMissions(m);
+        persistJSON(K.missions, m);
+        lsSet(K.missionsDate, today);
+      }
+      setSoundOn(ls.getItem(K.sound) !== '0');
+      setHapticsOn(ls.getItem(K.haptics) !== '0');
+      setEffectsOn(ls.getItem(K.effects) !== '0');
+    } catch {
+      /* defaults */
+    }
+  }, []);
+
+  /* ---------- react → engine effects ---------- */
+  useEffect(() => {
+    engineApiRef.current?.applySkin(skinById(selected));
+  }, [selected]);
+  useEffect(() => {
+    engineApiRef.current?.refreshBaseSpeed();
+  }, [level]);
+
+  /* ---------- settings ---------- */
+  function toggleSound() {
