@@ -1351,3 +1351,50 @@ export default function FlappyDusk() {
               disabled={keys < reviveCost}
               onClick={useKeyContinue}
             >
+              {keys < reviveCost ? `Need ${reviveCost} 🔑 · have ${keys}` : `Continue · ${reviveCost} 🔑`}
+            </button>
+            <button type="button" className={styles.btn} onClick={playAgain}>
+              Play again
+            </button>
+            <button type="button" className={styles.btnGhost} onClick={goHome}>
+              Home
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* shop */}
+      {panel === 'shop' && (
+        <div
+          className={styles.layer}
+          style={{ pointerEvents: 'auto', zIndex: 10, background: 'rgba(42,31,61,0.6)' }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            setPanel('none');
+          }}
+        >
+          <div className={styles.shopPanel} onPointerDown={(e) => e.stopPropagation()}>
+            <div className={styles.shopHead}>
+              <span>Bird Shop</span>
+              <span className={styles.chip}>
+                <span className={styles.coinIcon} /> {coins}
+              </span>
+            </div>
+            <div className={styles.skinGrid}>
+              {SKINS.map((skin) => {
+                const isOwned = owned.includes(skin.id);
+                const isSel = selected === skin.id;
+                const canBuy = !isOwned && coins >= skin.cost;
+                return (
+                  <div
+                    key={skin.id}
+                    className={`${styles.skinCard} ${isSel ? styles.skinCardSel : ''}`}
+                  >
+                    <span
+                      className={styles.swatch}
+                      style={{
+                        background: `radial-gradient(circle at 35% 30%, ${hex(skin.belly)} 8%, ${hex(
+                          skin.body,
+                        )} 55%, ${hex(skin.wing)} 100%)`,
+                      }}
+                    />
