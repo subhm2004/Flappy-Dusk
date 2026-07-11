@@ -24,3 +24,28 @@ export interface Pipe {
   powerTaken: boolean;
 }
 
+export type Status = 'ready' | 'playing' | 'dead';
+
+export interface State {
+  status: Status;
+  time: number;
+  birdY: number;
+  birdVY: number;
+  pipes: Pipe[];
+  /** Current pipe speed (ramps up with score from `baseSpeed`). */
+  speed: number;
+  /** Starting speed for this run (raised by the player's level). */
+  baseSpeed: number;
+  score: number;
+  coins: number;
+  keys: number;
+  /** Active power-up state. */
+  shield: boolean;
+  invT: number;
+  magnetT: number;
+  slowT: number;
+  fastT: number;
+  rng: () => number;
+}
+
+/** Events emitted by a single simulation step, consumed by the renderer/UI. */
