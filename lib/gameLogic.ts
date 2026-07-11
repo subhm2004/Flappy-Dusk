@@ -279,3 +279,28 @@ export function step(s: State, dt: number): StepEvent {
       s.birdY = C.GROUND_Y + C.BIRD_R;
       s.birdVY = 0;
     }
+    return ev;
+  }
+
+  // tick active power-up timers
+  s.magnetT = Math.max(0, s.magnetT - dt);
+  s.slowT = Math.max(0, s.slowT - dt);
+  s.fastT = Math.max(0, s.fastT - dt);
+  s.invT = Math.max(0, s.invT - dt);
+
+  const factor = (s.slowT > 0 ? C.SLOW_FACTOR : 1) * (s.fastT > 0 ? C.FAST_FACTOR : 1);
+  for (let i = 0; i < s.pipes.length; i++) s.pipes[i].x -= s.speed * factor * dt;
+  while (s.pipes.length && s.pipes[0].x < C.DESPAWN_X) s.pipes.shift();
+  let last = s.pipes[s.pipes.length - 1];
+  while (!last || last.x < C.SPAWN_X - C.PIPE_SPACING) {
+    const nx = last ? last.x + C.PIPE_SPACING : C.FIRST_PIPE_X;
+    const ng = nextGapY(last ? last.gapY : 5.1, s.rng);
+    s.pipes.push(makePipe(nx, ng, s.rng));
+    last = s.pipes[s.pipes.length - 1];
+  }
+
+  const magnetOn = s.magnetT > 0;
+  for (let j = 0; j < s.pipes.length; j++) {
+    const p = s.pipes[j];
+    if (!p.scored && p.x + C.PIPE_R < C.BIRD_X - C.BIRD_R) {
+      p.scored = true;
