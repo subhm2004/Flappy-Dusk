@@ -512,3 +512,49 @@ export default function FlappyDusk() {
       groundTex.wrapT = THREE.RepeatWrapping;
       groundTex.repeat.set(10, 1);
       const ground = new THREE.Mesh(
+        new THREE.BoxGeometry(70, 1.2, 12),
+        new THREE.MeshStandardMaterial({ map: groundTex, roughness: 1, metalness: 0 }),
+      );
+      ground.position.set(4, C.GROUND_Y - 0.6, -1);
+      ground.receiveShadow = true;
+      scene.add(ground);
+    }
+
+    /* dunes */
+    {
+      const colors = [0xb79bd8, 0xa88ac9, 0xc4a9e3];
+      for (let i = 0; i < 6; i++) {
+        const d = new THREE.Mesh(new THREE.SphereGeometry(8 + (i % 3) * 3, 10, 8), mat(colors[i % 3]));
+        d.scale.y = 0.35;
+        d.position.set(-26 + i * 13, 0.4, -26 - (i % 2) * 9);
+        scene.add(d);
+      }
+    }
+
+    /* clouds */
+    const clouds: THREE.Group[] = [];
+    {
+      const cmat = new THREE.MeshStandardMaterial({ color: 0xfff4e3, flatShading: true, roughness: 1 });
+      for (let i = 0; i < 7; i++) {
+        const grp = new THREE.Group();
+        const n = 3 + (i % 2);
+        for (let k = 0; k < n; k++) {
+          const puff = new THREE.Mesh(
+            new THREE.SphereGeometry(0.9 + 0.5 * Math.abs(Math.sin(i * 3 + k * 5)), 8, 7),
+            cmat,
+          );
+          puff.position.set(k * 1.1 - n * 0.5, (k % 2) * 0.35, 0);
+          puff.castShadow = true;
+          grp.add(puff);
+        }
+        const z = -5 - (i % 4) * 4.5;
+        grp.position.set(-20 + i * 8, 7.4 + (i % 3) * 1.2, z);
+        grp.userData.speed = (reduceMotion ? 0.12 : 0.45) * (1 - Math.abs(z) / 30);
+        clouds.push(grp);
+        scene.add(grp);
+      }
+    }
+
+    /* bird */
+    const bird = new THREE.Group();
+    let wingL: THREE.Mesh;
