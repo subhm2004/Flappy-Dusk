@@ -17,7 +17,7 @@
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white">
   <img alt="Three.js" src="https://img.shields.io/badge/Three.js-r160-000000?logo=threedotjs&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-53%20passing-3FA070">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-73%20passing-3FA070">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-FF6F59">
 </p>
 
@@ -143,6 +143,22 @@ A live HUD shows active effects and their countdown.
 - **Levels** — missions and achievements grant XP; filling the bar levels you up,
   and **each level nudges the base speed up**, so the game grows with you
 
+### 🏆 Global leaderboard
+
+- Sign in with Google — your name comes straight from your account
+- Every run you finish without a revive is ranked
+- **Scores are verified, not trusted.** The game sends the *inputs* of a run —
+  seed, base speed, and the step index of every flap — and the server replays
+  them through the same physics to work out the score itself. `{"score": 999999}`
+  isn't a cheat the protocol can express; there's no such field to forge.
+- Optional. With no API configured the game is exactly what it was: offline,
+  local, no sign-in.
+
+### 🎨 Pipe tiers
+
+The pipes change colour as you climb — **Grove** green, then **Amber** at 50,
+**Orchid** at 100, **Ember** at 150 — so a long run looks like one.
+
 ### ✨ Polish
 - Medals on game over — Bronze / Silver / Gold / Platinum
 - Screen-shake, death flash, and coloured tints while slow/fast-mo is active
@@ -192,50 +208,61 @@ Open **http://localhost:3000**.
 
 ## Scripts
 
-| Script | What it does |
+Run from the repo root — one `npm install` wires up all three workspaces.
+
+| Script | Does |
 |---|---|
-| `npm run dev` | Start the dev server (hot reload) |
-| `npm run build` | Production build — also type-checks the whole project |
-| `npm run start` | Serve the production build |
-| `npm test` | Run the game-logic + progression unit tests |
-| `npm run test:watch` | Run tests in watch mode |
+| `npm run dev` | The game, on http://localhost:3000 |
+| `npm run api` | The leaderboard API, on http://localhost:8080 |
+| `npm run build` | Static export → `frontend/out` |
+| `npm test` | 73 tests (all of them live in `shared/`) |
+| `npm run typecheck` | `tsc --noEmit` across every workspace |
 
 ---
 
 ## Project structure
 
+One repo, three workspaces. The game core sits in the middle because *both*
+sides need it — the browser to play a run, the server to replay it.
+
 ```
-app/
-  layout.tsx              Root layout, metadata, viewport
-  page.tsx                Renders the game
-  globals.css             CSS reset, fonts, theme variables
-components/
-  FlappyDusk.tsx          Client component: Three.js scene, game loop, all UI
-  FlappyDusk.module.css   HUD, home screen, shop, missions, settings, toasts
-lib/
-  gameLogic.ts            Pure, deterministic, DOM-free game core
-  gameLogic.test.ts       Unit tests for the core
-  progression.ts          Levels/XP, daily missions, achievements (pure)
-  progression.test.ts     Unit tests for progression
-  skins.ts                Bird skin definitions + prices
-docs/
-  banner.svg              README hero
-  demo.gif                Gameplay preview
-.github/workflows/
-  ci.yml                  Typecheck + tests + build on every push and PR
-  android.yml             Builds the APK; attaches it to v* releases
-capacitor.config.ts       Wraps the static export in the Android WebView shell
-DEPLOYMENT.md             Web hosting, APK builds, signing, troubleshooting
+shared/                   @flappy/core — pure, deterministic, DOM-free
+  src/gameLogic.ts          physics, pipes, collisions, scoring
+  src/progression.ts        levels/XP, daily missions, achievements
+  src/replay.ts             re-runs a submitted run to verify its score
+  src/shop.ts               key bundles and the coin economy
+  src/tiers.ts              pipe colours at 50 / 100 / 150
+  src/*.test.ts             73 tests — the whole suite lives here
+
+frontend/                 the game
+  app/                      layout, page, favicon, OAuth callback
+  components/FlappyDusk.tsx Three.js scene, game loop, every panel
+  lib/skins.ts              bird skins
+  lib/api.ts                leaderboard client
+  lib/auth.ts               Google sign-in (system browser + deep link)
+  capacitor.config.ts       wraps the static export in the Android WebView
+  scripts/android-deeplink.mjs  registers the sign-in deep link
+
+backend/                  the leaderboard API
+  src/routes/runs.ts        scores a run by replaying it, never by trusting it
+  src/routes/leaderboard.ts ranks players by their best run
+  src/routes/auth.ts        Google OAuth for both the web and the app
+  src/db/schema.ts          users + runs (Postgres, Drizzle)
+  Dockerfile                built from the repo root — it needs shared/
+  docker-compose.yml        Postgres + API, for when you want them locally
+
+.github/workflows/        CI, and the APK builder
+DEPLOYMENT.md             Vercel, Neon, Render, Google Cloud, the APK
 ```
 
-> `android/` isn't committed — Capacitor regenerates it from
-> `capacitor.config.ts` on every build, so there's no native project to drift.
+> Neither `frontend/android/` nor `frontend/out/` is committed — Capacitor and
+> Next regenerate them on every build.
 
 ---
 
 ## How it works
 
-### The pure core — `lib/gameLogic.ts`
+### The pure core — `shared/src/gameLogic.ts`
 
 No DOM. No Three.js. No unseeded randomness. The entire simulation is:
 
@@ -250,7 +277,7 @@ Because it's pure and deterministic, the exact code that ships is the code the
 tests exercise — collision math, pickup placement, power-up timers, and the
 shield/revive rules included.
 
-### The renderer — `components/FlappyDusk.tsx`
+### The renderer — `frontend/components/FlappyDusk.tsx`
 
 A single `useEffect` builds the scene, runs the loop, and tears everything down on
 unmount (cancels the animation frame, removes listeners, disposes the WebGL
@@ -301,29 +328,19 @@ npm test
 
 ## Deploying
 
-The game is fully client-side, so `npm run build` emits a static bundle to
-`out/` — and that one bundle is everything that ships, to both targets:
-
 ```
-out/  ──┬──▶  a static host (Vercel)          ──▶  flappy-dusk.vercel.app
-        └──▶  a Capacitor WebView + Gradle    ──▶  flappy-dusk.apk
-```
-
-**Web** — zero config on [Vercel](https://vercel.com/new); import the repo and
-deploy. Every push to `main` redeploys.
-
-**Android** — GitHub Actions builds the APK, so you don't need Android Studio or
-the SDK locally. Trigger it from
-[Actions → Android APK → Run workflow](https://github.com/subhm2004/Flappy-Dusk/actions/workflows/android.yml),
-or tag a version to publish it as a release:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
+shared/  ──┬──▶ frontend/ ──▶ static bundle ──┬──▶ Vercel     the website
+           │                                  └──▶ Capacitor  the APK
+           └──▶ backend/  ──▶ Docker image  ─────▶ Render     the API
+                                                   Neon       the database
 ```
 
-Netlify, GitHub Pages, local APK builds, and release signing are all covered in
-**[DEPLOYMENT.md](DEPLOYMENT.md)**.
+The game runs fine with no backend at all — local progress, no sign-in, and the
+leaderboard button simply isn't there.
+
+**[DEPLOYMENT.md](DEPLOYMENT.md)** has the whole thing: Vercel (note the
+**Root Directory must be `frontend`**), the Neon database, the Render service,
+the Google Cloud OAuth client, the APK, and why the leaderboard can't be lied to.
 
 ---
 
@@ -353,7 +370,6 @@ Not built yet:
 
 - [ ] PWA — installable + offline play
 - [ ] Daily challenge (date-seeded run, same pipes for everyone)
-- [ ] Local leaderboard (top 5 runs)
 - [ ] Background music
 - [ ] Difficulty modes (easy / normal / hard)
 - [ ] Moving pipes at high scores

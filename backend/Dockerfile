@@ -24,8 +24,9 @@ FROM base AS runtime
 
 ENV NODE_ENV=production
 
+# npm workspaces hoist everything to the root, so this is the only node_modules
+# there is — backend/node_modules never exists.
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/backend/node_modules ./backend/node_modules
 COPY package.json ./
 COPY shared ./shared
 COPY backend ./backend
