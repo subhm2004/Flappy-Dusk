@@ -1538,3 +1538,49 @@ export default function FlappyDusk() {
                 {effectsOn ? 'On' : 'Off'}
               </button>
             </div>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnDanger}`}
+              onClick={resetProgress}
+            >
+              Reset progress
+            </button>
+            <button type="button" className={styles.btn} onClick={() => setPanel('none')}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* toasts */}
+      {toasts.length > 0 && (
+        <div className={styles.toastWrap}>
+          {toasts.map((t) => (
+            <div key={t.id} className={styles.toast}>
+              {t.text}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* pause */}
+      <div
+        className={`${styles.layer} ${styles.pauseOverlay}`}
+        ref={pauseOverlayRef}
+        style={{ display: 'none' }}
+      >
+        <div className={styles.pauseTitle}>Paused</div>
+        <div className={styles.sub}>tap to resume</div>
+      </div>
+
+      {/* fatal */}
+      <div className={`${styles.layer} ${styles.fatal}`} ref={fatalRef} style={{ display: 'none' }}>
+        <div className={styles.fatalPanel} ref={fatalMsgRef} />
+      </div>
+
+      {/* effect tint + death flash */}
+      <div className={styles.fxTint} ref={fxRef} />
+      <div className={styles.flash} ref={flashRef} />
+    </>
+  );
+}
