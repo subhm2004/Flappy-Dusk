@@ -838,3 +838,50 @@ export default function FlappyDusk() {
         if (p.life <= 0) p.mesh.visible = false;
       }
     }
+
+    /* audio */
+    const audio: { ctx: AudioContext | null } = { ctx: null };
+    function audioInit() {
+      if (audio.ctx) return;
+      try {
+        const AC =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (AC) audio.ctx = new AC();
+      } catch {
+        audio.ctx = null;
+      }
+    }
+    function blip(freqA: number, freqB: number, dur: number, type: OscillatorType, gainV: number) {
+      if (!soundRef.current || !audio.ctx) return;
+      try {
+        const t0 = audio.ctx.currentTime;
+        const osc = audio.ctx.createOscillator();
+        const gain = audio.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freqA, t0);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(40, freqB), t0 + dur);
+        gain.gain.setValueAtTime(gainV, t0);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        osc.connect(gain).connect(audio.ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.02);
+      } catch {
+        /* decorative */
+      }
+    }
+    const sfx = {
+      flap: () => blip(380, 640, 0.09, 'sine', 0.12),
+      score: () => {
+        blip(660, 660, 0.06, 'triangle', 0.14);
+        setTimeout(() => blip(880, 880, 0.09, 'triangle', 0.14), 70);
+      },
+      coin: () => {
+        blip(880, 1320, 0.07, 'sine', 0.12);
+        setTimeout(() => blip(1320, 1760, 0.07, 'sine', 0.1), 55);
+      },
+      key: () => {
+        blip(520, 780, 0.08, 'triangle', 0.14);
+        setTimeout(() => blip(1040, 1560, 0.12, 'triangle', 0.12), 60);
+      },
+      power: () => {
