@@ -236,3 +236,37 @@ with a key can't double-count coins or mission progress.
 
 The game core and progression system are pure, so they're tested headlessly — no
 browser, no DOM:
+
+```bash
+npm test
+```
+
+**53 tests** covering:
+
+- the seeded PRNG and gap-generation bounds
+- collision, and coin / key / power-up pickup math
+- power-up effects (shield absorption, slow/fast speed factors, timer expiry)
+- scoring, death conditions, and level-driven base speed
+- full-run determinism (same seed + inputs → identical result)
+- XP curves, level roll-over, daily-mission generation, achievement unlocks
+
+---
+
+## Deploying
+
+Zero-config on [Vercel](https://vercel.com):
+
+```bash
+npm i -g vercel
+vercel          # preview deploy
+vercel --prod   # production
+```
+
+Or push to GitHub and import the repo at [vercel.com/new](https://vercel.com/new)
+— the framework is auto-detected, no settings needed.
+
+---
+
+## Recording your own demo
+
+`docs/demo.gif` ships as a stylized preview. To replace it with real gameplay:
