@@ -1398,3 +1398,50 @@ export default function FlappyDusk() {
                         )} 55%, ${hex(skin.wing)} 100%)`,
                       }}
                     />
+                    <span className={styles.skinName}>{skin.name}</span>
+                    {isOwned ? (
+                      <button
+                        type="button"
+                        className={`${styles.smallBtn} ${isSel ? styles.smallBtnSel : ''}`}
+                        disabled={isSel}
+                        onClick={() => selectSkin(skin.id)}
+                      >
+                        {isSel ? 'Selected' : 'Select'}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className={styles.smallBtn}
+                        disabled={!canBuy}
+                        onClick={() => buySkin(skin)}
+                      >
+                        <span className={styles.coinIcon} /> {skin.cost}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <button type="button" className={styles.btn} onClick={() => setPanel('none')}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* missions + achievements */}
+      {panel === 'missions' && (
+        <div
+          className={styles.layer}
+          style={{ pointerEvents: 'auto', zIndex: 10, background: 'rgba(42,31,61,0.6)' }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            setPanel('none');
+          }}
+        >
+          <div className={styles.shopPanel} onPointerDown={(e) => e.stopPropagation()}>
+            <div className={styles.shopHead}>
+              <span>Daily Missions</span>
+              <span className={styles.chip}>LV {level}</span>
+            </div>
+            <div className={styles.missionList}>
