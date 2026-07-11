@@ -177,3 +177,28 @@ export function createState(seed?: number, baseSpeed?: number): State {
     score: 0,
     coins: 0,
     keys: 0,
+    shield: false,
+    invT: 0,
+    magnetT: 0,
+    slowT: 0,
+    fastT: 0,
+    rng,
+  };
+}
+
+export function flap(s: State): void {
+  if (s.status === 'ready') s.status = 'playing';
+  if (s.status !== 'playing') return;
+  s.birdVY = C.FLAP_VY;
+}
+
+/**
+ * Revives a dead run: keeps score, coins, keys, and base speed, but drops the
+ * bird back to centre with a fresh field and a brief grace window. Active
+ * power-ups are cleared.
+ */
+export function revive(s: State): void {
+  s.status = 'playing';
+  s.birdY = C.READY_Y;
+  s.birdVY = 0;
+  s.pipes = buildField(s.rng);
