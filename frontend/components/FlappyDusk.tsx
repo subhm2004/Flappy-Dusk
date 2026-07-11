@@ -6,9 +6,17 @@ import {
   C,
   createState,
   flap,
+  PIPE_TIERS,
   revive,
   step,
+  tierFor,
+  bestValueBundle,
+  buyKeyBundle,
+  KEY_BUNDLES,
+  type KeyBundle,
+  type PipeTier,
   type PowerType,
+  type RunSubmission,
   type State,
 } from '@flappy/core';
 import { DEFAULT_SKIN, SKINS, skinById, hex, type Skin } from '@/lib/skins';
@@ -28,6 +36,16 @@ import {
   type Mission,
   type RunStats,
 } from '@flappy/core';
+import {
+  api,
+  apiEnabled,
+  clearToken,
+  getToken,
+  type LeaderboardRow,
+  type Me,
+  type MyRank,
+} from '@/lib/api';
+import { listenForNativeSignIn, signIn } from '@/lib/auth';
 import styles from './FlappyDusk.module.css';
 
 const K = {
@@ -86,6 +104,13 @@ interface RunEndInfo {
   dCoins: number;
   dKeys: number;
   dPowerups: number;
+  /**
+   * Everything the server needs to replay this run and score it itself.
+   *
+   * Null when the run was revived: a revive rebuilds the pipe field mid-run, so
+   * the inputs no longer reproduce it and the leaderboard can't verify it.
+   */
+  replay: RunSubmission | null;
 }
 
 function lsSet(key: string, value: string) {
@@ -117,7 +142,16 @@ export default function FlappyDusk() {
   const [phase, setPhase] = useState<Phase>('home');
   const [runStats, setRunStats] = useState({ score: 0, coins: 0, keys: 0 });
   const [reviveCount, setReviveCount] = useState(0);
-  const [panel, setPanel] = useState<'none' | 'shop' | 'missions' | 'settings'>('none');
+  const [panel, setPanel] = useState<'none' | 'shop' | 'missions' | 'settings' | 'leaderboard'>(
+    'none',
+  );
+
+  /* Leaderboard. All of this stays dark unless the build was given an API to
+     talk to — the game is playable, and fully offline, without one. */
+  const [me, setMe] = useState<Me | null>(null);
+  const [board, setBoard] = useState<LeaderboardRow[] | null>(null);
+  const [myRank, setMyRank] = useState<MyRank | null>(null);
+  const [boardError, setBoardError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<{ id: number; text: string }[]>([]);
 
   /* ---------- DOM + bridge refs ---------- */
@@ -143,6 +177,7 @@ export default function FlappyDusk() {
   const onPhaseRef = useRef<(p: Phase) => void>(() => {});
   const onRunEndRef = useRef<(info: RunEndInfo) => void>(() => {});
   const onToggleSoundRef = useRef<() => void>(() => {});
+  const onTierRef = useRef<(tier: PipeTier) => void>(() => {});
 
   const toastId = useRef(0);
   function pushToast(text: string) {
@@ -160,6 +195,7 @@ export default function FlappyDusk() {
   uiBlockRef.current = panel !== 'none';
   onPhaseRef.current = (p) => setPhase(p);
   onToggleSoundRef.current = () => toggleSound();
+  onTierRef.current = (tier) => pushToast(`${tier.from} — ${tier.name} pipes`);
 
   onRunEndRef.current = (info) => {
     const run: RunStats = {
@@ -222,6 +258,15 @@ export default function FlappyDusk() {
     persistNum(K.xp, lv.xp);
 
     setRunStats({ score: info.score, coins: info.runCoins, keys: info.runKeys });
+    // Send the run's inputs up for ranking. We post what happened, not what we
+    // scored — the server replays it and decides. Revived runs carry no replay,
+    // because a revive rebuilds the field and the inputs stop reproducing it.
+    if (apiEnabled && getToken() && info.replay && info.score > 0) {
+      api.submitRun(info.replay).catch(() => {
+        // A rejected or unreachable leaderboard must never spoil the run.
+      });
+    }
+
     setPhase('dead');
   };
 
@@ -341,6 +386,64 @@ export default function FlappyDusk() {
     setOwned(no);
     persistJSON(K.owned, no);
     selectSkin(skin.id);
+  }
+  function buyKeys(bundle: KeyBundle) {
+    const result = buyKeyBundle({ coins, keys }, bundle.id);
+    if (!result.ok) return;
+
+    setCoins(result.purse.coins);
+    persistNum(K.coins, result.purse.coins);
+    setKeys(result.purse.keys);
+    persistNum(K.keys, result.purse.keys);
+    pushToast(`🔑 +${bundle.keys} ${bundle.keys === 1 ? 'key' : 'keys'}`);
+  }
+
+  /* ---------- leaderboard ---------- */
+
+  // Pick up an existing session, and — on Android — the one that arrives by deep
+  // link when the system browser finishes Google sign-in.
+  useEffect(() => {
+    if (!apiEnabled) return;
+
+    const load = () => {
+      if (!getToken()) return;
+      api
+        .me()
+        .then(setMe)
+        .catch(() => setMe(null));
+    };
+
+    load();
+    return listenForNativeSignIn(() => {
+      load();
+      pushToast('Signed in');
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function openLeaderboard() {
+    setPanel('leaderboard');
+    setBoardError(null);
+
+    try {
+      // Render's free tier sleeps, so the first call after a while is slow
+      // rather than broken. Say so instead of showing an empty board.
+      const [rows, mine] = await Promise.all([
+        api.leaderboard(),
+        getToken() ? api.myRank().catch(() => null) : Promise.resolve(null),
+      ]);
+      setBoard(rows);
+      setMyRank(mine);
+    } catch {
+      setBoardError('Could not reach the leaderboard.');
+    }
+  }
+
+  function signOut() {
+    clearToken();
+    setMe(null);
+    setMyRank(null);
+    pushToast('Signed out');
   }
 
   /* ---------- navigation ---------- */
@@ -680,9 +783,13 @@ export default function FlappyDusk() {
     /* pipe pool */
     const POOL = 8;
     const pipePool: THREE.Group[] = [];
+    // Every pipe in the pool shares these two materials, so moving up a tier is
+    // two colour writes rather than a walk over the scene.
+    const pipeBodyMat = mat(PIPE_TIERS[0].body);
+    const pipeRimMat = mat(PIPE_TIERS[0].rim);
     {
-      const bodyM = mat(0x62c88f);
-      const lipM = mat(0x3fa070);
+      const bodyM = pipeBodyMat;
+      const lipM = pipeRimMat;
       for (let i = 0; i < POOL; i++) {
         const grp = new THREE.Group();
         const bottom = new THREE.Mesh(new THREE.CylinderGeometry(C.PIPE_R, C.PIPE_R, 1, 14), bodyM);
@@ -969,7 +1076,36 @@ export default function FlappyDusk() {
     }
 
     /* state */
-    let state = createState(undefined, levelBaseSpeed(levelRef.current, C.SPEED0));
+    /* The run, as the server will see it.
+       We pick the seed ourselves rather than letting createState default to the
+       clock, because the leaderboard has to be able to rebuild this exact pipe
+       field. Flaps are recorded as step indices — physics runs on a fixed
+       timestep, so that is enough to reproduce the run exactly. */
+    let runSeed = 0;
+    let runBaseSpeed: number = C.SPEED0;
+    let runSteps = 0;
+    let runFlaps: number[] = [];
+    let runRevived = false;
+
+    function newRun(): State {
+      runSeed = Math.floor(Math.random() * 0x100000000) >>> 0;
+      runBaseSpeed = levelBaseSpeed(levelRef.current, C.SPEED0);
+      runSteps = 0;
+      runFlaps = [];
+      runRevived = false;
+      setPipeTier(PIPE_TIERS[0]);
+      return createState(runSeed, runBaseSpeed);
+    }
+
+    /* Pipes recolour as the score climbs, so a long run reads as one at a glance. */
+    let pipeTier: PipeTier = PIPE_TIERS[0];
+    function setPipeTier(tier: PipeTier) {
+      pipeTier = tier;
+      pipeBodyMat.color.setHex(tier.body);
+      pipeRimMat.color.setHex(tier.rim);
+    }
+
+    let state = newRun();
     let paused = false;
     let wingPulse = 0;
     let acc = 0;
@@ -1009,8 +1145,14 @@ export default function FlappyDusk() {
       reported.coins = state.coins;
       reported.keys = state.keys;
       reported.powerups = runPowerups;
+
+      // The death step is part of the run, and `runSteps` has already counted it.
+      const replay: RunSubmission | null = runRevived
+        ? null
+        : { seed: runSeed, baseSpeed: runBaseSpeed, steps: runSteps, flaps: runFlaps.slice() };
+
       setTimeout(() => {
-        onRunEndRef.current({ score, runCoins, runKeys, dCoins, dKeys, dPowerups });
+        onRunEndRef.current({ score, runCoins, runKeys, dCoins, dKeys, dPowerups, replay });
       }, 550);
     }
 
@@ -1031,7 +1173,7 @@ export default function FlappyDusk() {
 
     /* engine API */
     function doRestart() {
-      state = createState(undefined, levelBaseSpeed(levelRef.current, C.SPEED0));
+      state = newRun();
       resetRunReporting();
       syncPipes(state);
       scoreEl!.textContent = '0';
@@ -1044,6 +1186,9 @@ export default function FlappyDusk() {
       // React decides which menu to show after a restart (home vs ready)
     }
     function doRevive() {
+      // A revive rebuilds the pipe field mid-run, so the recorded inputs no
+      // longer reproduce it. The run stays playable; it just can't be ranked.
+      runRevived = true;
       revive(state);
       syncPipes(state);
       bird.rotation.z = 0;
@@ -1069,6 +1214,9 @@ export default function FlappyDusk() {
       audioInit();
       const wasReady = state.status === 'ready';
       if (wasReady) onPhaseRef.current('playing');
+      // Recorded before the flap lands, because the next fixed step is the one
+      // that will feel it — which is exactly how the server replays it.
+      if (runFlaps[runFlaps.length - 1] !== runSteps) runFlaps.push(runSteps);
       flap(state);
       sfx.flap();
       spawnPuffs();
@@ -1152,9 +1300,16 @@ export default function FlappyDusk() {
       acc += d;
       while (acc >= C.DT) {
         const ev = step(state, C.DT);
+        runSteps++;
         if (ev.scored > 0) {
           setScore(state.score);
           sfx.score();
+
+          const tier = tierFor(state.score);
+          if (tier !== pipeTier) {
+            setPipeTier(tier);
+            onTierRef.current(tier);
+          }
         }
         if (ev.coined > 0) {
           setCoinsHud(state.coins);
@@ -1367,6 +1522,11 @@ export default function FlappyDusk() {
               <button type="button" className={styles.shopBtn} onClick={() => setPanel('missions')}>
                 🎯 Missions{doneMissions > 0 ? ` (${doneMissions}/3)` : ''}
               </button>
+              {apiEnabled && (
+                <button type="button" className={styles.shopBtn} onClick={openLeaderboard}>
+                  🏆 Leaderboard
+                </button>
+              )}
               <button type="button" className={styles.shopBtn} onClick={() => setPanel('settings')}>
                 ⚙ Settings
               </button>
@@ -1489,9 +1649,115 @@ export default function FlappyDusk() {
                 );
               })}
             </div>
+
+            {/* Keys drop from about 2% of pipes, so the best birds can be a long
+                wait. Coins are the way through — cheaper per key in bulk. */}
+            <div className={styles.shopHead} style={{ marginTop: 4 }}>
+              <span>Keys</span>
+              <span className={styles.chip}>🔑 {keys}</span>
+            </div>
+            <div className={styles.skinGrid}>
+              {KEY_BUNDLES.map((bundle) => {
+                const affordable = coins >= bundle.cost;
+                const isBest = bundle.id === bestValueBundle().id;
+                return (
+                  <div key={bundle.id} className={styles.skinCard}>
+                    <span className={styles.swatch} style={{ background: 'none', fontSize: 26 }}>
+                      🔑
+                    </span>
+                    <span className={styles.skinName}>
+                      {bundle.keys} {bundle.keys === 1 ? 'key' : 'keys'}
+                      {isBest ? ' ★' : ''}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.smallBtn}
+                      disabled={!affordable}
+                      onClick={() => buyKeys(bundle)}
+                    >
+                      <span className={styles.coinIcon} /> {bundle.cost}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
             <button type="button" className={styles.btn} onClick={() => setPanel('none')}>
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* leaderboard */}
+      {panel === 'leaderboard' && (
+        <div
+          className={styles.layer}
+          style={{ pointerEvents: 'auto', zIndex: 10, background: 'rgba(42,31,61,0.6)' }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            setPanel('none');
+          }}
+        >
+          <div className={styles.shopPanel} onPointerDown={(e) => e.stopPropagation()}>
+            <div className={styles.shopHead}>
+              <span>Leaderboard</span>
+              {me && myRank?.rank ? (
+                <span className={styles.chip}>
+                  #{myRank.rank} · {myRank.best}
+                </span>
+              ) : null}
+            </div>
+
+            {boardError ? (
+              <p className={styles.boardNote}>
+                {boardError}
+                <br />
+                The server may be waking up — try again in a moment.
+              </p>
+            ) : board === null ? (
+              <p className={styles.boardNote}>Loading…</p>
+            ) : board.length === 0 ? (
+              <p className={styles.boardNote}>Nobody has posted a score yet. Be the first.</p>
+            ) : (
+              <ol className={styles.board}>
+                {board.map((row) => (
+                  <li
+                    key={`${row.rank}-${row.name}`}
+                    className={`${styles.boardRow} ${
+                      me && row.name === me.name ? styles.boardRowMe : ''
+                    }`}
+                  >
+                    <span className={styles.boardRank}>{row.rank}</span>
+                    <span className={styles.boardName}>{row.name}</span>
+                    <span className={styles.boardScore}>{row.best}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+
+            {me ? (
+              <p className={styles.boardNote}>
+                Signed in as <b>{me.name}</b>. Every run you finish without a revive is ranked.
+              </p>
+            ) : (
+              <p className={styles.boardNote}>Sign in to have your runs ranked.</p>
+            )}
+
+            <div className={styles.menuBtns}>
+              {me ? (
+                <button type="button" className={styles.shopBtn} onClick={signOut}>
+                  Sign out
+                </button>
+              ) : (
+                <button type="button" className={styles.shopBtn} onClick={() => void signIn()}>
+                  Sign in with Google
+                </button>
+              )}
+              <button type="button" className={styles.shopBtn} onClick={() => setPanel('none')}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

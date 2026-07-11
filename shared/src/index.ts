@@ -9,3 +9,5 @@
 export * from './gameLogic.js';
 export * from './progression.js';
 export * from './replay.js';
+export * from './shop.js';
+export * from './tiers.js';

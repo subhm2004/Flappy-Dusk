@@ -8,7 +8,10 @@ import { MAX_STEPS, allowedBaseSpeeds, replayRun, type RunSubmission } from './r
  * records exactly what the client would send. Whatever this returns, replaying
  * it on the server must reproduce.
  */
-function playRun(seed: number, baseSpeed = C.SPEED0): { sub: RunSubmission; score: number; coins: number } {
+function playRun(
+  seed: number,
+  baseSpeed: number = C.SPEED0,
+): { sub: RunSubmission; score: number; coins: number } {
   const state = createState(seed, baseSpeed);
   const flaps: number[] = [];
   let steps = 0;
