@@ -465,3 +465,50 @@ export default function FlappyDusk() {
       g.fillStyle = grad;
       g.fillRect(0, 0, 2, 512);
       const tex = new THREE.CanvasTexture(c);
+      markSRGB(tex);
+      scene.background = tex;
+    }
+
+    /* lights */
+    scene.add(new THREE.HemisphereLight(0xffe2c4, 0xb87a96, 0.85));
+    const sun = new THREE.DirectionalLight(0xffd9b0, 1.15);
+    sun.position.set(-9, 13, 7);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 70;
+    sun.shadow.camera.left = -24;
+    sun.shadow.camera.right = 34;
+    sun.shadow.camera.top = 24;
+    sun.shadow.camera.bottom = -6;
+    scene.add(sun);
+    const sunDisc = new THREE.Mesh(
+      new THREE.SphereGeometry(4.6, 20, 20),
+      new THREE.MeshBasicMaterial({ color: 0xffeec2, fog: false }),
+    );
+    sunDisc.position.set(-24, 9, -46);
+    scene.add(sunDisc);
+
+    function mat(color: number) {
+      return new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: 0.92, metalness: 0 });
+    }
+
+    /* ground */
+    let groundTex: THREE.CanvasTexture;
+    {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 64;
+      const g = c.getContext('2d')!;
+      g.fillStyle = '#F6DFAF';
+      g.fillRect(0, 0, 256, 64);
+      g.fillStyle = '#EBC894';
+      g.fillRect(0, 0, 128, 64);
+      g.fillStyle = 'rgba(255,255,255,0.18)';
+      g.fillRect(120, 0, 8, 64);
+      groundTex = new THREE.CanvasTexture(c);
+      markSRGB(groundTex);
+      groundTex.wrapS = THREE.RepeatWrapping;
+      groundTex.wrapT = THREE.RepeatWrapping;
+      groundTex.repeat.set(10, 1);
+      const ground = new THREE.Mesh(
