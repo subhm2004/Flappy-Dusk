@@ -1,0 +1,29 @@
+{
+  "name": "@flappy/backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Leaderboard API: Google OAuth, Postgres, and replay-validated run submission.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "@flappy/core": "*",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.36.4",
+    "fastify": "^5.1.0",
+    "jose": "^5.9.6",
+    "postgres": "^3.4.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "drizzle-kit": "^0.28.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.5.3"
+  }
+}

@@ -30,6 +30,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
 
+      # One install at the workspace root wires up shared/, frontend/ and backend/.
       - name: Install dependencies
         run: npm ci
 
@@ -39,5 +40,5 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Build
+      - name: Build the game
         run: npm run build

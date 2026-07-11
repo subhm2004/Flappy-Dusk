@@ -1,14 +1,15 @@
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp
 .pnp.js
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build/
+dist/
 
 # misc
 .DS_Store
@@ -19,8 +20,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
+# env — the backend needs real secrets; never commit them
+.env
 .env*.local
+!.env.example
 
 # typescript
 *.tsbuildinfo
@@ -28,8 +31,8 @@ next-env.d.ts
 
 # capacitor — the native project is regenerated from capacitor.config.ts
 # by `npx cap add android`, so it is never committed
-/android
-/ios
+android/
+ios/
 
 # repo tooling (local only)
 make_commits.sh

@@ -1,0 +1,49 @@
+# Local development: the API plus a Postgres to talk to.
+#
+#   cd backend
+#   cp .env.example .env      # fill in the Google credentials
+#   docker compose up
+#
+# In production these are two separate things — the API runs on Render, the
+# database is Neon — so nothing here is used to deploy.
+
+name: flappy-dusk
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: flappy
+      POSTGRES_PASSWORD: flappy
+      POSTGRES_DB: flappy
+    ports:
+      # Exposed so `npm run db:push` can reach it from the host.
+      - '5432:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U flappy -d flappy']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      # The repo root: the image needs the shared workspace, not just backend/.
+      context: ..
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      # Overrides .env — inside the network the database is `db`, not localhost.
+      DATABASE_URL: postgres://flappy:flappy@db:5432/flappy
+      PORT: 8080
+    ports:
+      - '8080:8080'
+
+volumes:
+  db-data:

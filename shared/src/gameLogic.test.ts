@@ -13,7 +13,7 @@ import {
   step,
   type State,
   type Pipe,
-} from './gameLogic';
+} from './gameLogic.js';
 
 /** A bare pipe with no pickups, for collision-style tests. */
 function mkPipe(over: Partial<Pipe> = {}): Pipe {

@@ -4,7 +4,7 @@
  * without a browser. React owns the persistence and wiring.
  */
 
-import { makeRng } from './gameLogic';
+import { makeRng } from './gameLogic.js';
 
 /* ---------------- levels ---------------- */
 

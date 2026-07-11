@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { C } from './gameLogic';
+import { C } from './gameLogic.js';
 import {
   addXp,
   advanceMissions,
@@ -13,7 +13,7 @@ import {
   todayKey,
   xpToNext,
   type RunStats,
-} from './progression';
+} from './progression.js';
 
 describe('levels / xp', () => {
   it('needs more xp for higher levels', () => {

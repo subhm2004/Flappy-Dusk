@@ -3,29 +3,21 @@
   "version": "1.0.0",
   "private": true,
   "description": "Flappy Dusk — a pretty, playable 3D flappy-bird game built with Next.js + Three.js.",
+  "workspaces": [
+    "shared",
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "typecheck": "tsc --noEmit",
+    "dev": "npm run dev -w @flappy/frontend",
+    "build": "npm run build -w @flappy/frontend",
+    "start": "npm run start -w @flappy/frontend",
+    "api": "npm run dev -w @flappy/backend",
+    "typecheck": "npm run typecheck -w @flappy/core && npm run typecheck -w @flappy/frontend && npm run typecheck -w @flappy/backend",
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "dependencies": {
-    "@capacitor/android": "^6.2.1",
-    "@capacitor/core": "^6.2.1",
-    "next": "^14.2.5",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "three": "^0.160.0"
-  },
   "devDependencies": {
-    "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^6.2.1",
-    "@types/node": "^20.14.10",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@types/three": "^0.160.0",
     "typescript": "^5.5.3",
     "vitest": "^2.0.5"
   }

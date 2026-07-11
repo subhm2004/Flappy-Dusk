@@ -10,7 +10,7 @@ import {
   step,
   type PowerType,
   type State,
-} from '@/lib/gameLogic';
+} from '@flappy/core';
 import { DEFAULT_SKIN, SKINS, skinById, hex, type Skin } from '@/lib/skins';
 import {
   ACHIEVEMENTS,
@@ -27,7 +27,7 @@ import {
   type LifetimeStats,
   type Mission,
   type RunStats,
-} from '@/lib/progression';
+} from '@flappy/core';
 import styles from './FlappyDusk.module.css';
 
 const K = {
