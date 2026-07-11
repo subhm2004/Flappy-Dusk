@@ -1118,3 +1118,50 @@ export default function FlappyDusk() {
       if (state.status === 'dead') {
         if (state.birdY > C.GROUND_Y + C.BIRD_R + 0.01) bird.rotation.z -= 5.5 * d;
       } else {
+        const targetTilt = Math.max(-0.55, Math.min(0.5, state.birdVY * 0.062));
+        bird.rotation.z += (targetTilt - bird.rotation.z) * Math.min(1, d * 12);
+      }
+      wingPulse = Math.max(0, wingPulse - d * 2.2);
+      const flapAmp = 0.25 + wingPulse * 0.9;
+      const w = Math.sin(now * 0.001 * 22) * flapAmp - 0.15;
+      wingL.rotation.x = -w;
+      wingR.rotation.x = -w;
+
+      /* world */
+      syncPipes(state);
+      for (let i = 0; i < coinPool.length; i++) {
+        if (coinPool[i].visible) coinPool[i].rotation.y += d * 3.2;
+        if (keyPool[i].visible) keyPool[i].rotation.y += d * 2.6;
+      }
+      if (state.status === 'playing') groundTex.offset.x += (state.speed * d) / 7;
+      for (let i = 0; i < clouds.length; i++) {
+        const cl = clouds[i];
+        cl.position.x -= cl.userData.speed * d * (state.status === 'playing' ? 1.6 : 1);
+        if (cl.position.x < -30) cl.position.x = 34;
+      }
+      updatePuffs(d);
+
+      /* power-up HUD + tint */
+      let hud = '';
+      if (state.shield) hud += '🛡 ';
+      if (state.magnetT > 0) hud += `🧲 ${state.magnetT.toFixed(1)}s `;
+      if (state.slowT > 0) hud += `🐢 ${state.slowT.toFixed(1)}s `;
+      if (state.fastT > 0) hud += `⚡ ${state.fastT.toFixed(1)}s `;
+      hud = hud.trim();
+      if (hud !== lastHud) {
+        powerHudEl!.textContent = hud;
+        powerHudEl!.style.display = hud ? 'flex' : 'none';
+        lastHud = hud;
+      }
+      let tint = '';
+      if (effectsRef.current) {
+        if (state.slowT > 0) tint = 'rgba(60,120,255,0.12)';
+        else if (state.fastT > 0) tint = 'rgba(255,140,40,0.12)';
+      }
+      if (tint !== lastTint) {
+        fxEl!.style.background = tint || 'transparent';
+        lastTint = tint;
+      }
+
+      /* camera */
+      let camY = reduceMotion ? CAM_Y : CAM_Y + Math.sin(now * 0.0006) * 0.06;
