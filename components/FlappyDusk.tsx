@@ -417,8 +417,25 @@ export default function FlappyDusk() {
       return effectsRef.current && !reduceMotion;
     }
 
-    const CAM_X = -2.2;
-    const CAM_Y = 4.3;
+    /* Camera framing.
+       The world is wide — pipes stream in from the right — but a perspective
+       camera has a fixed *vertical* FOV, so the visible width is whatever the
+       aspect ratio gives you. At a fixed distance a 9:20 phone held upright
+       sees ~6 world units across, and pipes are 6.8 apart: a pipe would appear
+       at the right edge and reach the bird in under a second.
+       So fit the camera to a target box instead of pinning its distance —
+       see fitCamera(). */
+    const VIEW_CENTER_X = 1.6; // where the camera looks, on the play plane
+    const VIEW_CENTER_Y = 4.4;
+    const VIEW_H_MIN = 14.1; // playfield + margin; also the old wide-screen framing
+    const LEAD_X = 9; // runway that must stay visible ahead of the bird
+    const BEHIND_X = 1.6; // breathing room behind the bird
+    const HALF_FOV = ((55 / 2) * Math.PI) / 180;
+
+    // Set by fitCamera(); the frame loop reads these as the resting position.
+    let camX = -2.2;
+    let camY0 = 4.3;
+
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -447,9 +464,50 @@ export default function FlappyDusk() {
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0xf2a087, 26, 72);
-    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(CAM_X, CAM_Y, 13.5);
-    camera.lookAt(new THREE.Vector3(1.6, 4.4, 0));
+    const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
+
+    /* Pull the camera back until both fit: the whole playfield vertically, and
+       LEAD_X of runway ahead of the bird horizontally. On a wide screen the
+       width comes for free and this resolves to the original framing
+       (z = 13.5, looking at 1.6, 4.4). On a tall phone it backs off until the
+       bird can actually see what's coming. */
+    function fitCamera() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const aspect = w / h;
+
+      const viewH = Math.max(VIEW_H_MIN, (LEAD_X + BEHIND_X) / aspect);
+      const z = viewH / (2 * Math.tan(HALF_FOV));
+      const halfW = (viewH * aspect) / 2;
+
+      // Slide the framing right on narrow screens so the bird sits near the
+      // left edge and the runway ahead of it is as long as possible. On wide
+      // screens VIEW_CENTER_X wins and nothing moves.
+      const cx = Math.min(VIEW_CENTER_X, C.BIRD_X + halfW - BEHIND_X);
+      // Backing off would otherwise stare at the side of the ground slab, so
+      // lift the view as it widens — enough to leave only a strip of ground
+      // below the playfield, with the extra room going to sky.
+      const cy = VIEW_CENTER_Y + (viewH - VIEW_H_MIN) * 0.5;
+
+      // Keep the camera's original 3D angle: it sits back and to the left of
+      // whatever it looks at.
+      camX = cx - 3.8;
+      camY0 = cy - 0.1;
+
+      camera.aspect = aspect;
+      camera.position.set(camX, camY0, z);
+      camera.lookAt(cx, cy, 0);
+      camera.updateProjectionMatrix();
+
+      // Push the haze back with the camera, or the pipes would fog out.
+      const push = Math.max(0, z - 13.54);
+      const fog = scene.fog as THREE.Fog;
+      fog.near = 26 + push;
+      fog.far = 72 + push * 1.5;
+
+      renderer.setSize(w, h);
+    }
+    fitCamera();
 
     /* sky */
     {
@@ -511,11 +569,14 @@ export default function FlappyDusk() {
       groundTex.wrapS = THREE.RepeatWrapping;
       groundTex.wrapT = THREE.RepeatWrapping;
       groundTex.repeat.set(10, 1);
+      // Deep enough that pulling the camera back on a tall screen can't reveal
+      // sky underneath it. The top face still sits exactly on GROUND_Y.
+      const groundH = 34;
       const ground = new THREE.Mesh(
-        new THREE.BoxGeometry(70, 1.2, 12),
+        new THREE.BoxGeometry(70, groundH, 12),
         new THREE.MeshStandardMaterial({ map: groundTex, roughness: 1, metalness: 0 }),
       );
-      ground.position.set(4, C.GROUND_Y - 0.6, -1);
+      ground.position.set(4, C.GROUND_Y - groundH / 2, -1);
       ground.receiveShadow = true;
       scene.add(ground);
     }
@@ -979,7 +1040,7 @@ export default function FlappyDusk() {
       paused = false;
       bird.rotation.z = 0;
       shakeAmt = 0;
-      camera.position.x = CAM_X;
+      camera.position.x = camX;
       // React decides which menu to show after a restart (home vs ready)
     }
     function doRevive() {
@@ -1033,9 +1094,11 @@ export default function FlappyDusk() {
       }
     }
     function onResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      fitCamera();
+    }
+    function onOrientation() {
+      fitCamera();
+      requestAnimationFrame(fitCamera);
     }
     function onVisibility() {
       if (document.hidden && state.status === 'playing') setPaused(true);
@@ -1058,6 +1121,9 @@ export default function FlappyDusk() {
     window.addEventListener('pointerdown', action);
     window.addEventListener('keydown', onKey);
     window.addEventListener('resize', onResize);
+    // Some Android browsers fire orientationchange before the new viewport size
+    // has settled, so refit on the next frame too.
+    window.addEventListener('orientationchange', onOrientation);
     window.addEventListener('error', onErr);
     document.addEventListener('visibilitychange', onVisibility);
     pauseBtnEl.addEventListener('pointerdown', onPauseBtn);
@@ -1164,13 +1230,13 @@ export default function FlappyDusk() {
       }
 
       /* camera */
-      let camY = reduceMotion ? CAM_Y : CAM_Y + Math.sin(now * 0.0006) * 0.06;
+      let camY = reduceMotion ? camY0 : camY0 + Math.sin(now * 0.0006) * 0.06;
       if (shakeAmt > 0) {
-        camera.position.x = CAM_X + (Math.random() - 0.5) * shakeAmt;
+        camera.position.x = camX + (Math.random() - 0.5) * shakeAmt;
         camY += (Math.random() - 0.5) * shakeAmt;
         shakeAmt = Math.max(0, shakeAmt - d * 2.2);
       } else {
-        camera.position.x = CAM_X;
+        camera.position.x = camX;
       }
       camera.position.y = camY;
 
@@ -1185,6 +1251,7 @@ export default function FlappyDusk() {
       window.removeEventListener('pointerdown', action);
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onOrientation);
       window.removeEventListener('error', onErr);
       document.removeEventListener('visibilitychange', onVisibility);
       pauseBtnEl.removeEventListener('pointerdown', onPauseBtn);
