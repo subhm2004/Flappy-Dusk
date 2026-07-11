@@ -139,3 +139,38 @@ describe('createState', () => {
       }
     }
   });
+
+  it('gives each pipe at most one pickup (coin / key / power)', () => {
+    // sweep several seeds so we exercise all pickup types
+    for (let seed = 0; seed < 40; seed++) {
+      const s = createState(seed);
+      for (const p of s.pipes) {
+        const n = (p.coin ? 1 : 0) + (p.key ? 1 : 0) + (p.power ? 1 : 0);
+        expect(n).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+});
+
+describe('flap', () => {
+  it('transitions ready -> playing and applies upward velocity', () => {
+    const s = createState(1);
+    flap(s);
+    expect(s.status).toBe('playing');
+    expect(s.birdVY).toBe(C.FLAP_VY);
+  });
+
+  it('does nothing once dead', () => {
+    const s = createState(1);
+    s.status = 'dead';
+    s.birdVY = -3;
+    flap(s);
+    expect(s.status).toBe('dead');
+    expect(s.birdVY).toBe(-3);
+  });
+});
+
+describe('collide', () => {
+  const pipe: Pipe = mkPipe();
+
+  it('is false when the bird is centred in the gap', () => {
