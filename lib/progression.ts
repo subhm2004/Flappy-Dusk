@@ -66,3 +66,26 @@ export const EMPTY_STATS: LifetimeStats = {
 export function foldRun(stats: LifetimeStats, run: RunStats): LifetimeStats {
   return {
     runs: stats.runs + 1,
+    earnedCoins: stats.earnedCoins + run.coins,
+    totalKeys: stats.totalKeys + run.keys,
+    totalPowerups: stats.totalPowerups + run.powerups,
+    bestScore: Math.max(stats.bestScore, run.score),
+  };
+}
+
+/* ---------------- daily missions ---------------- */
+
+export type Metric = 'coins' | 'score' | 'keys' | 'powerups' | 'runs';
+
+interface MissionTemplate {
+  id: string;
+  metric: Metric;
+  min: number;
+  max: number;
+  /** true = progress is the best single-run value; false = cumulative sum. */
+  single?: boolean;
+  label: (t: number) => string;
+}
+
+const TEMPLATES: MissionTemplate[] = [
+  { id: 'coins', metric: 'coins', min: 25, max: 70, label: (t) => `Collect ${t} coins` },
