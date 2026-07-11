@@ -168,3 +168,37 @@ Open **http://localhost:3000**.
 ```
 app/
   layout.tsx              Root layout, metadata, viewport
+  page.tsx                Renders the game
+  globals.css             CSS reset, fonts, theme variables
+components/
+  FlappyDusk.tsx          Client component: Three.js scene, game loop, all UI
+  FlappyDusk.module.css   HUD, home screen, shop, missions, settings, toasts
+lib/
+  gameLogic.ts            Pure, deterministic, DOM-free game core
+  gameLogic.test.ts       Unit tests for the core
+  progression.ts          Levels/XP, daily missions, achievements (pure)
+  progression.test.ts     Unit tests for progression
+  skins.ts                Bird skin definitions + prices
+docs/
+  banner.svg              README hero
+  demo.gif                Gameplay preview
+```
+
+---
+
+## How it works
+
+### The pure core — `lib/gameLogic.ts`
+
+No DOM. No Three.js. No unseeded randomness. The entire simulation is:
+
+```ts
+const state = createState(seed, baseSpeed);
+flap(state);
+const event = step(state, 1 / 120);
+// event -> { scored, coined, keyed, powered, power, shieldUsed, died }
+```
+
+Because it's pure and deterministic, the exact code that ships is the code the
+tests exercise — collision math, pickup placement, power-up timers, and the
+shield/revive rules included.
